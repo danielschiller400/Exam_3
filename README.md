@@ -17,4 +17,4 @@ create an image. Finally, execute `$> docker run -p 8080:8080 --rm <IMAGE_ID>` t
 
 Call `mvn verify` to start the integration tests.  
 Then the integration tests will be executed on a random and available port. All integration tests must be located in 
-the `src/test/java` directory.
+the `src/test/java` directory and must end with `Tests`. See class `DemoApplicationTests` for an example.
