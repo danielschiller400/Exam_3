@@ -92,7 +92,8 @@ public class PartnerUniversityModuleService {
         module.setPartnerUniversity(partnerUniversity.get());  // Beziehung setzen
         Module savedModule = moduleRepository.save(module);
         EntityModel<Module> moduleResource = EntityModel.of(savedModule,
-                linkTo(methodOn(PartnerUniversityModuleController.class).getModuleOfPartnerUniversityById(universityId, savedModule.getId())).withSelfRel());
+                linkTo(methodOn(PartnerUniversityModuleController.class).getModuleOfPartnerUniversityById(universityId, savedModule.getId())).withSelfRel(),
+                linkTo(PartnerUniversityController.class).slash(universityId).withRel(RelTypes.GET_SINGLE_PARTNER_UNIVERSITY));
         return new ResponseEntity<>(moduleResource, HttpStatus.CREATED);
     }
 

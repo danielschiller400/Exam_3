@@ -46,7 +46,8 @@ public class PartnerUniversityService {
                     .collect(Collectors.toList());
 
             CollectionModel<EntityModel<PartnerUniversity>> collectionModel = CollectionModel.of(partnerUniversityModels,
-                    linkTo(PartnerUniversityController.class).withRel(RelTypes.SELF));
+                    linkTo(PartnerUniversityController.class).withRel(RelTypes.SELF),
+                    linkTo(PartnerUniversityController.class).withRel(RelTypes.CREATE_PARTNER_UNIVERSITY));
 
             HttpHeaders headers = new HttpHeaders();
             addPaginationLinks(headers, page, size, pageResult);
