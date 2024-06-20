@@ -65,20 +65,24 @@ public class PartnerUniversityService {
     }
 
     public ResponseEntity<EntityModel<PartnerUniversity>> getPartnerUniversityById(long id) {
-        Optional<PartnerUniversity> partnerUniversityData = partnerUniversityRepository.findById(id);
+        try {
+            Optional<PartnerUniversity> partnerUniversityData = partnerUniversityRepository.findById(id);
 
-        if (partnerUniversityData.isPresent()) {
-            PartnerUniversity university = partnerUniversityData.get();
-            EntityModel<PartnerUniversity> partnerUniversityModel = EntityModel.of(university,
-                    linkTo(methodOn(PartnerUniversityController.class).getPartnerUniversityById(id)).withSelfRel().withType("*/*"),
-                    linkTo(PartnerUniversityController.class).slash(id).slash("modules").withRel(RelTypes.GET_ALL_MODULES_OF_PARTNER_UNIVERSITY).withType("*/*"));
+            if (partnerUniversityData.isPresent()) {
+                PartnerUniversity university = partnerUniversityData.get();
+                EntityModel<PartnerUniversity> partnerUniversityModel = EntityModel.of(university,
+                        linkTo(methodOn(PartnerUniversityController.class).getPartnerUniversityById(id)).withSelfRel().withType("*/*"),
+                        linkTo(PartnerUniversityController.class).slash(id).slash("modules").withRel(RelTypes.GET_ALL_MODULES_OF_PARTNER_UNIVERSITY).withType("*/*"));
 
-            HttpHeaders headers = new HttpHeaders();
-            addCrudLinksGetSingle(headers);
+                HttpHeaders headers = new HttpHeaders();
+                addCrudLinksGetSingle(headers);
 
-            return new ResponseEntity<>(partnerUniversityModel, headers, HttpStatus.OK);
-        } else {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+                return new ResponseEntity<>(partnerUniversityModel, headers, HttpStatus.OK);
+            } else {
+                return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+            }
+        }catch (Exception e){
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -97,33 +101,43 @@ public class PartnerUniversityService {
             EntityModel<PartnerUniversity> partnerUniversityModel = EntityModel.of(savedUniversity,
                     linkTo(methodOn(PartnerUniversityController.class).getPartnerUniversityById(savedUniversity.getId())).withSelfRel().withType("application/json"));
 
+            HttpHeaders headers = new HttpHeaders();
+            addCrudLinksPostPut(headers);
 
-            return new ResponseEntity<>(partnerUniversityModel, HttpStatus.CREATED);
+            return new ResponseEntity<>(partnerUniversityModel, headers, HttpStatus.CREATED);
         } catch (Exception e) {
             return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
     public ResponseEntity<EntityModel<PartnerUniversity>> updatePartnerUniversity(long id, PartnerUniversity partnerUniversity) {
-        Optional<PartnerUniversity> partnerUniversityData = partnerUniversityRepository.findById(id);
+        try {
+            Optional<PartnerUniversity> partnerUniversityData = partnerUniversityRepository.findById(id);
 
-        if (partnerUniversityData.isPresent()) {
-            PartnerUniversity existingUniversity = partnerUniversityData.get();
-            existingUniversity.setName(partnerUniversity.getName());
-            existingUniversity.setCountry(partnerUniversity.getCountry());
-            existingUniversity.setDepartment(partnerUniversity.getDepartment());
-            existingUniversity.setWebsiteUrl(partnerUniversity.getWebsiteUrl());
-            existingUniversity.setContactPerson(partnerUniversity.getContactPerson());
-            existingUniversity.setMaxOutgoingStudents(partnerUniversity.getMaxOutgoingStudents());
-            existingUniversity.setMaxIncomingStudents(partnerUniversity.getMaxIncomingStudents());
-            existingUniversity.setNextSpringSemesterStart(partnerUniversity.getNextSpringSemesterStart());
-            existingUniversity.setNextAutumnSemesterStart(partnerUniversity.getNextAutumnSemesterStart());
-            PartnerUniversity updatedUniversity = partnerUniversityRepository.save(existingUniversity);
-            EntityModel<PartnerUniversity> partnerUniversityModel = EntityModel.of(updatedUniversity,
-                    linkTo(methodOn(PartnerUniversityController.class).getPartnerUniversityById(updatedUniversity.getId())).withSelfRel().withType("*/*"));
-            return new ResponseEntity<>(partnerUniversityModel, HttpStatus.OK);
-        } else {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+            if (partnerUniversityData.isPresent()) {
+                PartnerUniversity existingUniversity = partnerUniversityData.get();
+                existingUniversity.setName(partnerUniversity.getName());
+                existingUniversity.setCountry(partnerUniversity.getCountry());
+                existingUniversity.setDepartment(partnerUniversity.getDepartment());
+                existingUniversity.setWebsiteUrl(partnerUniversity.getWebsiteUrl());
+                existingUniversity.setContactPerson(partnerUniversity.getContactPerson());
+                existingUniversity.setMaxOutgoingStudents(partnerUniversity.getMaxOutgoingStudents());
+                existingUniversity.setMaxIncomingStudents(partnerUniversity.getMaxIncomingStudents());
+                existingUniversity.setNextSpringSemesterStart(partnerUniversity.getNextSpringSemesterStart());
+                existingUniversity.setNextAutumnSemesterStart(partnerUniversity.getNextAutumnSemesterStart());
+                PartnerUniversity updatedUniversity = partnerUniversityRepository.save(existingUniversity);
+                EntityModel<PartnerUniversity> partnerUniversityModel = EntityModel.of(updatedUniversity,
+                        linkTo(methodOn(PartnerUniversityController.class).getPartnerUniversityById(updatedUniversity.getId())).withSelfRel().withType("*/*"));
+
+                HttpHeaders headers = new HttpHeaders();
+                addCrudLinksPostPut(headers);
+
+                return new ResponseEntity<>(partnerUniversityModel, headers, HttpStatus.OK);
+            } else {
+                return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+            }
+        }catch (Exception e) {
+            return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -168,6 +182,11 @@ public class PartnerUniversityService {
 
         String delete = "<" + linkTo(PartnerUniversityController.class).withRel(RelTypes.DELETE_SINGLE_PARTNER_UNIVERSITY).getHref() + "/{id}" + ">; rel=\"" + RelTypes.DELETE_SINGLE_PARTNER_UNIVERSITY + "\";type=\"*/*\"";
         header.add(HttpHeaders.LINK, delete);
+    }
+
+    private void addCrudLinksPostPut(HttpHeaders header){
+        String getSingle = "<" + linkTo(PartnerUniversityController.class).withRel(RelTypes.GET_SINGLE_PARTNER_UNIVERSITY).getHref() + "/{id}" + ">; rel=\"" + RelTypes.GET_SINGLE_PARTNER_UNIVERSITY + "\";type=\"*/*\"";
+        header.add(HttpHeaders.LINK, getSingle);
     }
 
 

@@ -68,57 +68,73 @@ public class PartnerUniversityModuleService {
     }
 
     public ResponseEntity<EntityModel<Module>> getModuleOfPartnerUniversityById(long universityId, Long id) {
-        HttpHeaders headers = new HttpHeaders();
-        addCrudLinksGetSingle(headers);
+        try {
+            HttpHeaders headers = new HttpHeaders();
+            addCrudLinksGetSingle(headers);
 
-        if (!partnerUniversityRepository.existsById(universityId)) {
-            return new ResponseEntity<>(headers, HttpStatus.NOT_FOUND);
+            if (!partnerUniversityRepository.existsById(universityId)) {
+                return new ResponseEntity<>(headers, HttpStatus.NOT_FOUND);
+            }
+
+            Optional<Module> module = moduleRepository.findByIdAndPartnerUniversityId(id, universityId);
+            if (!module.isPresent()) {
+                return new ResponseEntity<>(headers, HttpStatus.NOT_FOUND);
+            }
+
+            Module moduleModel = module.get();
+            return module.map(value -> new ResponseEntity<>(EntityModel.of(value,
+                            linkTo(methodOn(PartnerUniversityModuleController.class).getModuleOfPartnerUniversityById(universityId, id)).withSelfRel().withType("*/*")), headers, HttpStatus.OK))
+                    .orElseGet(() -> new ResponseEntity<>(headers, HttpStatus.NOT_FOUND));
+        }catch (Exception e) {
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
-
-        Optional<Module> module = moduleRepository.findByIdAndPartnerUniversityId(id, universityId);
-        if (!module.isPresent()) {
-            return new ResponseEntity<>(headers, HttpStatus.NOT_FOUND);
-        }
-
-        Module moduleModel = module.get();
-        return module.map(value -> new ResponseEntity<>(EntityModel.of(value,
-                        linkTo(methodOn(PartnerUniversityModuleController.class).getModuleOfPartnerUniversityById(universityId, id)).withSelfRel().withType("*/*")), headers, HttpStatus.OK))
-                .orElseGet(() -> new ResponseEntity<>(headers, HttpStatus.NOT_FOUND));
     }
 
     public ResponseEntity<EntityModel<Module>> createModuleInPartnerUniversity(Long universityId, Module module) {
+        try {
+            HttpHeaders headers = new HttpHeaders();
+            addCrudLinksPostPut(headers);
 
-        Optional<PartnerUniversity> partnerUniversity = partnerUniversityRepository.findById(universityId);
-        if (!partnerUniversity.isPresent()) {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+            Optional<PartnerUniversity> partnerUniversity = partnerUniversityRepository.findById(universityId);
+            if (!partnerUniversity.isPresent()) {
+                return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+            }
+            module.setPartnerUniversity(partnerUniversity.get());
+            Module savedModule = moduleRepository.save(module);
+            EntityModel<Module> moduleResource = EntityModel.of(savedModule,
+                    linkTo(methodOn(PartnerUniversityModuleController.class).getModuleOfPartnerUniversityById(universityId, savedModule.getId())).withSelfRel().withType("*/*"),
+                    linkTo(PartnerUniversityController.class).slash(universityId).withRel(RelTypes.GET_SINGLE_PARTNER_UNIVERSITY).withType("*/*"));
+            return new ResponseEntity<>(moduleResource, headers, HttpStatus.CREATED);
+        }catch (Exception e){
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
-        module.setPartnerUniversity(partnerUniversity.get());  // Beziehung setzen
-        Module savedModule = moduleRepository.save(module);
-        EntityModel<Module> moduleResource = EntityModel.of(savedModule,
-                linkTo(methodOn(PartnerUniversityModuleController.class).getModuleOfPartnerUniversityById(universityId, savedModule.getId())).withSelfRel().withType("*/*"),
-                linkTo(PartnerUniversityController.class).slash(universityId).withRel(RelTypes.GET_SINGLE_PARTNER_UNIVERSITY).withType("*/*"));
-        return new ResponseEntity<>(moduleResource, HttpStatus.CREATED);
     }
 
     public ResponseEntity<EntityModel<Module>> updateModuleOfPartnerUniversity(long universityId, long id, Module moduleDetails) {
+        try{
+            if (!partnerUniversityRepository.existsById(universityId)) {
+                return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+            }
 
-        if (!partnerUniversityRepository.existsById(universityId)) {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+            HttpHeaders headers = new HttpHeaders();
+            addCrudLinksPostPut(headers);
+
+            Optional<Module> module = moduleRepository.findByIdAndPartnerUniversityId(id, universityId);
+            if (!module.isPresent()) {
+                return new ResponseEntity<>(headers, HttpStatus.NOT_FOUND);
+            }
+
+            Module existingModule = module.get();
+            existingModule.setName(moduleDetails.getName());
+            existingModule.setSemester(moduleDetails.getSemester());
+            existingModule.setCreditPoints(moduleDetails.getCreditPoints());
+            Module updatedModule = moduleRepository.save(existingModule);
+            EntityModel<Module> moduleResource = EntityModel.of(updatedModule,
+                    linkTo(methodOn(PartnerUniversityModuleController.class).getModuleOfPartnerUniversityById(universityId, updatedModule.getId())).withSelfRel().withType("*/*"));
+            return new ResponseEntity<>(moduleResource, headers, HttpStatus.OK);
+        }catch (Exception e) {
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
-
-        Optional<Module> module = moduleRepository.findByIdAndPartnerUniversityId(id, universityId);
-        if (!module.isPresent()) {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-        }
-
-        Module existingModule = module.get();
-        existingModule.setName(moduleDetails.getName());
-        existingModule.setSemester(moduleDetails.getSemester());
-        existingModule.setCreditPoints(moduleDetails.getCreditPoints());
-        Module updatedModule = moduleRepository.save(existingModule);
-        EntityModel<Module> moduleResource = EntityModel.of(updatedModule,
-                linkTo(methodOn(PartnerUniversityModuleController.class).getModuleOfPartnerUniversityById(universityId, updatedModule.getId())).withSelfRel().withType("*/*"));
-        return new ResponseEntity<>(moduleResource, HttpStatus.OK);
     }
 
     public ResponseEntity<HttpStatus> deleteModuleOfPartnerUniversity(Long universityId, Long id) {
@@ -163,6 +179,11 @@ public class PartnerUniversityModuleService {
 
         String delete = "<" + linkTo(PartnerUniversityController.class).withRel(RelTypes.DELETE_MODULE_OF_PARTNER_UNIVERSITY).getHref() + "/{id}" + "modules" + "/{id}" + ">; rel=\"" + RelTypes.DELETE_MODULE_OF_PARTNER_UNIVERSITY + "\";type=\"*/*\"";
         header.add(HttpHeaders.LINK, delete);
+    }
+
+    private void addCrudLinksPostPut(HttpHeaders header){
+        String getSingle = "<" + linkTo(PartnerUniversityController.class).withRel(RelTypes.GET_SINGLE_MODULE_OF_PARTNER_UNIVERSITY).getHref() + "/{id}" + "modules" + "/{id}" + ">; rel=\"" + RelTypes.GET_SINGLE_MODULE_OF_PARTNER_UNIVERSITY + "\";type=\"*/*\"";
+        header.add(HttpHeaders.LINK, getSingle);
     }
 
     private void addCrudLinksDelete(HttpHeaders header){
