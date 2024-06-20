@@ -51,7 +51,6 @@ class DemoApplicationTests {
         HttpHeaders headers = response.getHeaders();
         List<String> linkHeaders = headers.get("Link");
         String url = frontend.getLinkFromRel(linkHeaders, RelTypes.CREATE_PARTNER_UNIVERSITY);
-        System.out.println(url);
 
         String partnerUniversityJson = "{ \"name\": \"Test University\", \"country\": \"Test Country\"," +
                 " \"department\": \"IT\", \"websiteUrl\": \"Test url\", \"contactPerson\": \"Test person\"," +

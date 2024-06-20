@@ -137,7 +137,6 @@ public class Frontend {
     public String getLinkFromRel(List<String> list, String rel) {
         for (String s : list) {
             if (containsRel(s, rel)){
-                System.out.println("Test: " + s);
                 String url = extractLink(s, rel);
                 return url;
             }
