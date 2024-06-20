@@ -54,8 +54,8 @@ class DemoApplicationTests {
 
         String partnerUniversityJson = "{ \"name\": \"Test University\", \"country\": \"Test Country\"," +
                 " \"department\": \"IT\", \"websiteUrl\": \"Test url\", \"contactPerson\": \"Test person\"," +
-                " \"maxOutgoingStudents\": 100, \"maxIncomingStudents\": 50, \"nextSpringSemesterStart\": \"test date\"," +
-                " \"nextAutumnSemesterStart\": \"test date 2\" }";
+                " \"maxOutgoingStudents\": 100, \"maxIncomingStudents\": 50, \"nextSpringSemesterStart\": \"2024-03-01\"," +
+                " \"nextAutumnSemesterStart\": \"2024-09-15\" }";
         ResponseEntity<String> response2 = frontend.createPartnerUniversity(url, partnerUniversityJson);
         assertThat(response2.getStatusCode()).isEqualTo(HttpStatus.CREATED);
     }
@@ -80,8 +80,8 @@ class DemoApplicationTests {
         for (int i = 0; i < 5; i++) {
             String partnerUniversityJson = "{ \"name\": \"Test University\", \"country\": \"Test Country\"," +
                     " \"department\": \"IT\", \"websiteUrl\": \"Test url\", \"contactPerson\": \"Test person\"," +
-                    " \"maxOutgoingStudents\": 100, \"maxIncomingStudents\": 50, \"nextSpringSemesterStart\": \"test date\"," +
-                    " \"nextAutumnSemesterStart\": \"test date 2\" }";
+                    " \"maxOutgoingStudents\": 100, \"maxIncomingStudents\": 50, \"nextSpringSemesterStart\": \"2024-03-01\"," +
+                    " \"nextAutumnSemesterStart\": \"2024-09-15\" }";
             frontend.createPartnerUniversity(url, partnerUniversityJson);
         }
         ResponseEntity<String> response2 = frontend.getAllPartnerUniversities(url2);
@@ -117,8 +117,8 @@ class DemoApplicationTests {
         for (int i = 0; i < 5; i++) {
             String partnerUniversityJson = "{ \"name\": \"Test University\", \"country\": \"Test Country\"," +
                     " \"department\": \"IT\", \"websiteUrl\": \"Test url\", \"contactPerson\": \"Test person\"," +
-                    " \"maxOutgoingStudents\": 100, \"maxIncomingStudents\": 50, \"nextSpringSemesterStart\": \"test date\"," +
-                    " \"nextAutumnSemesterStart\": \"test date 2\" }";
+                    " \"maxOutgoingStudents\": 100, \"maxIncomingStudents\": 50, \"nextSpringSemesterStart\": \"2024-03-01\"," +
+                    " \"nextAutumnSemesterStart\": \"2024-09-15\" }";
             frontend.createPartnerUniversity(url, partnerUniversityJson);
         }
 
@@ -145,8 +145,8 @@ class DemoApplicationTests {
         for (int i = 0; i < 5; i++) {
             String partnerUniversityJson = "{ \"name\": \"Test University\", \"country\": \"Test Country\"," +
                     " \"department\": \"IT\", \"websiteUrl\": \"Test url\", \"contactPerson\": \"Test person\"," +
-                    " \"maxOutgoingStudents\": 100, \"maxIncomingStudents\": 50, \"nextSpringSemesterStart\": \"test date\"," +
-                    " \"nextAutumnSemesterStart\": \"test date 2\" }";
+                    " \"maxOutgoingStudents\": 100, \"maxIncomingStudents\": 50, \"nextSpringSemesterStart\": \"2024-03-01\"," +
+                    " \"nextAutumnSemesterStart\": \"2024-09-15\" }";
             frontend.createPartnerUniversity(url, partnerUniversityJson);
         }
 
@@ -179,8 +179,8 @@ class DemoApplicationTests {
         for (int i = 0; i < 5; i++) {
             String partnerUniversityJson = "{ \"name\": \"Test University\", \"country\": \"Test Country\"," +
                     " \"department\": \"IT\", \"websiteUrl\": \"Test url\", \"contactPerson\": \"Test person\"," +
-                    " \"maxOutgoingStudents\": 100, \"maxIncomingStudents\": 50, \"nextSpringSemesterStart\": \"test date\"," +
-                    " \"nextAutumnSemesterStart\": \"test date 2\" }";
+                    " \"maxOutgoingStudents\": 100, \"maxIncomingStudents\": 50, \"nextSpringSemesterStart\": \"2024-03-01\"," +
+                    " \"nextAutumnSemesterStart\": \"2024-09-15\" }";
             frontend.createPartnerUniversity(url, partnerUniversityJson);
         }
 
@@ -196,10 +196,10 @@ class DemoApplicationTests {
 
         String url4 = frontend.findLinkForRelInJson(jsonResponseString2, RelTypes.SELF);
 
-        String partnerUniversityUpdatedJson = "{ \"name\": \"Test University Updated\", \"country\": \"Test Country\"," +
+        String partnerUniversityUpdatedJson = "{ \"name\": \"Test University Update\", \"country\": \"Test Country\"," +
                 " \"department\": \"IT\", \"websiteUrl\": \"Test url\", \"contactPerson\": \"Test person\"," +
-                " \"maxOutgoingStudents\": 100, \"maxIncomingStudents\": 50, \"nextSpringSemesterStart\": \"test date\"," +
-                " \"nextAutumnSemesterStart\": \"test date 2\" }";
+                " \"maxOutgoingStudents\": 100, \"maxIncomingStudents\": 50, \"nextSpringSemesterStart\": \"2024-03-01\"," +
+                " \"nextAutumnSemesterStart\": \"2024-09-15\" }";
 
         ResponseEntity<String> response4 = frontend.updatePartnerUniversity(url4, partnerUniversityUpdatedJson);
         assertThat(response4.getStatusCode()).isEqualTo(HttpStatus.OK);
@@ -217,8 +217,8 @@ class DemoApplicationTests {
         for (int i = 0; i < 5; i++) {
             String partnerUniversityJson = "{ \"name\": \"Test University\", \"country\": \"Test Country\"," +
                     " \"department\": \"IT\", \"websiteUrl\": \"Test url\", \"contactPerson\": \"Test person\"," +
-                    " \"maxOutgoingStudents\": 100, \"maxIncomingStudents\": 50, \"nextSpringSemesterStart\": \"test date\"," +
-                    " \"nextAutumnSemesterStart\": \"test date 2\" }";
+                    " \"maxOutgoingStudents\": 100, \"maxIncomingStudents\": 50, \"nextSpringSemesterStart\": \"2024-03-01\"," +
+                    " \"nextAutumnSemesterStart\": \"2024-09-15\" }";
             frontend.createPartnerUniversity(url, partnerUniversityJson);
         }
 
@@ -249,8 +249,8 @@ class DemoApplicationTests {
         for (int i = 0; i < 5; i++) {
             String partnerUniversityJson = "{ \"name\": \"Test University\", \"country\": \"Test Country\"," +
                     " \"department\": \"IT\", \"websiteUrl\": \"Test url\", \"contactPerson\": \"Test person\"," +
-                    " \"maxOutgoingStudents\": 100, \"maxIncomingStudents\": 50, \"nextSpringSemesterStart\": \"test date\"," +
-                    " \"nextAutumnSemesterStart\": \"test date 2\" }";
+                    " \"maxOutgoingStudents\": 100, \"maxIncomingStudents\": 50, \"nextSpringSemesterStart\": \"2024-03-01\"," +
+                    " \"nextAutumnSemesterStart\": \"2024-09-15\" }";
             frontend.createPartnerUniversity(url, partnerUniversityJson);
         }
 
@@ -285,8 +285,8 @@ class DemoApplicationTests {
         for (int i = 0; i < 5; i++) {
             String partnerUniversityJson = "{ \"name\": \"Test University\", \"country\": \"Test Country\"," +
                     " \"department\": \"IT\", \"websiteUrl\": \"Test url\", \"contactPerson\": \"Test person\"," +
-                    " \"maxOutgoingStudents\": 100, \"maxIncomingStudents\": 50, \"nextSpringSemesterStart\": \"test date\"," +
-                    " \"nextAutumnSemesterStart\": \"test date 2\" }";
+                    " \"maxOutgoingStudents\": 100, \"maxIncomingStudents\": 50, \"nextSpringSemesterStart\": \"2024-03-01\"," +
+                    " \"nextAutumnSemesterStart\": \"2024-09-15\" }";
             frontend.createPartnerUniversity(url, partnerUniversityJson);
         }
 
@@ -317,8 +317,8 @@ class DemoApplicationTests {
         for (int i = 0; i < 5; i++) {
             String partnerUniversityJson = "{ \"name\": \"Test University\", \"country\": \"Test Country\"," +
                     " \"department\": \"IT\", \"websiteUrl\": \"Test url\", \"contactPerson\": \"Test person\"," +
-                    " \"maxOutgoingStudents\": 100, \"maxIncomingStudents\": 50, \"nextSpringSemesterStart\": \"test date\"," +
-                    " \"nextAutumnSemesterStart\": \"test date 2\" }";
+                    " \"maxOutgoingStudents\": 100, \"maxIncomingStudents\": 50, \"nextSpringSemesterStart\": \"2024-03-01\"," +
+                    " \"nextAutumnSemesterStart\": \"2024-09-15\" }";
             frontend.createPartnerUniversity(url, partnerUniversityJson);
         }
 
@@ -352,8 +352,8 @@ class DemoApplicationTests {
         for (int i = 0; i < 5; i++) {
             String partnerUniversityJson = "{ \"name\": \"Test University\", \"country\": \"Test Country\"," +
                     " \"department\": \"IT\", \"websiteUrl\": \"Test url\", \"contactPerson\": \"Test person\"," +
-                    " \"maxOutgoingStudents\": 100, \"maxIncomingStudents\": 50, \"nextSpringSemesterStart\": \"test date\"," +
-                    " \"nextAutumnSemesterStart\": \"test date 2\" }";
+                    " \"maxOutgoingStudents\": 100, \"maxIncomingStudents\": 50, \"nextSpringSemesterStart\": \"2024-03-01\"," +
+                    " \"nextAutumnSemesterStart\": \"2024-09-15\" }";
             frontend.createPartnerUniversity(url, partnerUniversityJson);
         }
 
@@ -383,8 +383,8 @@ class DemoApplicationTests {
         for (int i = 0; i < 5; i++) {
             String partnerUniversityJson = "{ \"name\": \"Test University\", \"country\": \"Test Country\"," +
                     " \"department\": \"IT\", \"websiteUrl\": \"Test url\", \"contactPerson\": \"Test person\"," +
-                    " \"maxOutgoingStudents\": 100, \"maxIncomingStudents\": 50, \"nextSpringSemesterStart\": \"test date\"," +
-                    " \"nextAutumnSemesterStart\": \"test date 2\" }";
+                    " \"maxOutgoingStudents\": 100, \"maxIncomingStudents\": 50, \"nextSpringSemesterStart\": \"2024-03-01\"," +
+                    " \"nextAutumnSemesterStart\": \"2024-09-15\" }";
             frontend.createPartnerUniversity(url, partnerUniversityJson);
         }
 
@@ -420,8 +420,8 @@ class DemoApplicationTests {
         for (int i = 0; i < 5; i++) {
             String partnerUniversityJson = "{ \"name\": \"Test University\", \"country\": \"Test Country\"," +
                     " \"department\": \"IT\", \"websiteUrl\": \"Test url\", \"contactPerson\": \"Test person\"," +
-                    " \"maxOutgoingStudents\": 100, \"maxIncomingStudents\": 50, \"nextSpringSemesterStart\": \"test date\"," +
-                    " \"nextAutumnSemesterStart\": \"test date 2\" }";
+                    " \"maxOutgoingStudents\": 100, \"maxIncomingStudents\": 50, \"nextSpringSemesterStart\": \"2024-03-01\"," +
+                    " \"nextAutumnSemesterStart\": \"2024-09-15\" }";
             frontend.createPartnerUniversity(url, partnerUniversityJson);
         }
 
@@ -462,8 +462,8 @@ class DemoApplicationTests {
         for (int i = 0; i < 5; i++) {
             String partnerUniversityJson = "{ \"name\": \"Test University\", \"country\": \"Test Country\"," +
                     " \"department\": \"IT\", \"websiteUrl\": \"Test url\", \"contactPerson\": \"Test person\"," +
-                    " \"maxOutgoingStudents\": 100, \"maxIncomingStudents\": 50, \"nextSpringSemesterStart\": \"test date\"," +
-                    " \"nextAutumnSemesterStart\": \"test date 2\" }";
+                    " \"maxOutgoingStudents\": 100, \"maxIncomingStudents\": 50, \"nextSpringSemesterStart\": \"2024-03-01\"," +
+                    " \"nextAutumnSemesterStart\": \"2024-09-15\" }";
             frontend.createPartnerUniversity(url, partnerUniversityJson);
         }
 
@@ -505,8 +505,8 @@ class DemoApplicationTests {
         for (int i = 0; i < 5; i++) {
             String partnerUniversityJson = "{ \"name\": \"Test University\", \"country\": \"Test Country\"," +
                     " \"department\": \"IT\", \"websiteUrl\": \"Test url\", \"contactPerson\": \"Test person\"," +
-                    " \"maxOutgoingStudents\": 100, \"maxIncomingStudents\": 50, \"nextSpringSemesterStart\": \"test date\"," +
-                    " \"nextAutumnSemesterStart\": \"test date 2\" }";
+                    " \"maxOutgoingStudents\": 100, \"maxIncomingStudents\": 50, \"nextSpringSemesterStart\": \"2024-03-01\"," +
+                    " \"nextAutumnSemesterStart\": \"2024-09-15\" }";
             frontend.createPartnerUniversity(url, partnerUniversityJson);
         }
 
@@ -553,8 +553,8 @@ class DemoApplicationTests {
         for (int i = 0; i < 5; i++) {
             String partnerUniversityJson = "{ \"name\": \"Test University\", \"country\": \"Test Country\"," +
                     " \"department\": \"IT\", \"websiteUrl\": \"Test url\", \"contactPerson\": \"Test person\"," +
-                    " \"maxOutgoingStudents\": 100, \"maxIncomingStudents\": 50, \"nextSpringSemesterStart\": \"test date\"," +
-                    " \"nextAutumnSemesterStart\": \"test date 2\" }";
+                    " \"maxOutgoingStudents\": 100, \"maxIncomingStudents\": 50, \"nextSpringSemesterStart\": \"2024-03-01\"," +
+                    " \"nextAutumnSemesterStart\": \"2024-09-15\" }";
             frontend.createPartnerUniversity(url, partnerUniversityJson);
         }
 
@@ -604,8 +604,8 @@ class DemoApplicationTests {
         for (int i = 0; i < 5; i++) {
             String partnerUniversityJson = "{ \"name\": \"Test University\", \"country\": \"Test Country\"," +
                     " \"department\": \"IT\", \"websiteUrl\": \"Test url\", \"contactPerson\": \"Test person\"," +
-                    " \"maxOutgoingStudents\": 100, \"maxIncomingStudents\": 50, \"nextSpringSemesterStart\": \"test date\"," +
-                    " \"nextAutumnSemesterStart\": \"test date 2\" }";
+                    " \"maxOutgoingStudents\": 100, \"maxIncomingStudents\": 50, \"nextSpringSemesterStart\": \"2024-03-01\"," +
+                    " \"nextAutumnSemesterStart\": \"2024-09-15\" }";
             frontend.createPartnerUniversity(url, partnerUniversityJson);
         }
 
@@ -652,8 +652,8 @@ class DemoApplicationTests {
         for (int i = 0; i < 5; i++) {
             String partnerUniversityJson = "{ \"name\": \"Test University\", \"country\": \"Test Country\"," +
                     " \"department\": \"IT\", \"websiteUrl\": \"Test url\", \"contactPerson\": \"Test person\"," +
-                    " \"maxOutgoingStudents\": 100, \"maxIncomingStudents\": 50, \"nextSpringSemesterStart\": \"test date\"," +
-                    " \"nextAutumnSemesterStart\": \"test date 2\" }";
+                    " \"maxOutgoingStudents\": 100, \"maxIncomingStudents\": 50, \"nextSpringSemesterStart\": \"2024-03-01\"," +
+                    " \"nextAutumnSemesterStart\": \"2024-09-15\" }";
             frontend.createPartnerUniversity(url, partnerUniversityJson);
         }
 

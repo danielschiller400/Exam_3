@@ -1,9 +1,11 @@
 package com.example.demo.api.model;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Min;
 
+import java.util.Date;
 import java.util.List;
 
 @Entity
@@ -25,10 +27,13 @@ public class PartnerUniversity {
     @Min(value = 0, message = "value has to be >= 0")
     private int maxIncomingStudents;
 
-    private String nextSpringSemesterStart;
-    private String nextAutumnSemesterStart;
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
+    private Date nextSpringSemesterStart;
 
-    public PartnerUniversity(String name, String country, String department, String websiteUrl, String contactPerson, int maxOutgoingStudents, int maxIncomingStudents, String nextSpringSemesterStart, String nextAutumnSemesterStart) {
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
+    private Date nextAutumnSemesterStart;
+
+    public PartnerUniversity(String name, String country, String department, String websiteUrl, String contactPerson, int maxOutgoingStudents, int maxIncomingStudents, Date nextSpringSemesterStart, Date nextAutumnSemesterStart) {
         this.name = name;
         this.country = country;
         this.department = department;
@@ -111,19 +116,19 @@ public class PartnerUniversity {
         this.maxIncomingStudents = maxIncomingStudents;
     }
 
-    public String getNextSpringSemesterStart() {
+    public Date getNextSpringSemesterStart() {
         return nextSpringSemesterStart;
     }
 
-    public void setNextSpringSemesterStart(String nextSpringSemesterStart) {
+    public void setNextSpringSemesterStart(Date nextSpringSemesterStart) {
         this.nextSpringSemesterStart = nextSpringSemesterStart;
     }
 
-    public String getNextAutumnSemesterStart() {
+    public Date getNextAutumnSemesterStart() {
         return nextAutumnSemesterStart;
     }
 
-    public void setNextAutumnSemesterStart(String nextAutumnSemesterStart) {
+    public void setNextAutumnSemesterStart(Date nextAutumnSemesterStart) {
         this.nextAutumnSemesterStart = nextAutumnSemesterStart;
     }
 
