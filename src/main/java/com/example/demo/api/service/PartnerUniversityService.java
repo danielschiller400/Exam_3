@@ -168,10 +168,10 @@ public class PartnerUniversityService {
 
 
     private void addCrudLinksGetSingle(HttpHeaders header, long id){
-        String createModule = "<" + linkTo(PartnerUniversityController.class).slash("modules").withRel(RelTypes.CREATE_MODULE_IN_PARTNER_UNIVERSITY).getHref() + ">; rel=\"" + RelTypes.CREATE_MODULE_IN_PARTNER_UNIVERSITY + "\";type=\"application/json\"";
+        String createModule = "<" + linkTo(PartnerUniversityController.class).slash(id).slash("modules").withRel(RelTypes.CREATE_MODULE_IN_PARTNER_UNIVERSITY).getHref() + ">; rel=\"" + RelTypes.CREATE_MODULE_IN_PARTNER_UNIVERSITY + "\";type=\"application/json\"";
         header.add(HttpHeaders.LINK, createModule);
 
-        String getAllModules = "<" + linkTo(PartnerUniversityController.class).slash("modules").withRel(RelTypes.GET_ALL_MODULES_OF_PARTNER_UNIVERSITY).getHref() + ">; rel=\"" + RelTypes.GET_ALL_MODULES_OF_PARTNER_UNIVERSITY + "\";type=\"*/*\"";
+        String getAllModules = "<" + linkTo(PartnerUniversityController.class).slash(id).slash("modules").withRel(RelTypes.GET_ALL_MODULES_OF_PARTNER_UNIVERSITY).getHref() + ">; rel=\"" + RelTypes.GET_ALL_MODULES_OF_PARTNER_UNIVERSITY + "\";type=\"*/*\"";
         header.add(HttpHeaders.LINK, getAllModules);
 
         String getAll = "<" + linkTo(PartnerUniversityController.class).withRel(RelTypes.GET_ALL_PARTNER_UNIVERSITIES).getHref() + ">; rel=\"" + RelTypes.GET_ALL_PARTNER_UNIVERSITIES + "\";type=\"*/*\"";
