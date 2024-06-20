@@ -172,6 +172,9 @@ public class PartnerUniversityModuleService {
     private void addCrudLinksCollectionNoContent(HttpHeaders header, long id){
         String create = "<" + linkTo(PartnerUniversityController.class).slash(id).withRel(RelTypes.CREATE_MODULE_IN_PARTNER_UNIVERSITY).getHref() + "/modules" + ">; rel=\"" + RelTypes.CREATE_MODULE_IN_PARTNER_UNIVERSITY + "\";type=\"application/json\"";
         header.add(HttpHeaders.LINK, create);
+
+        String getSingle = "<" + linkTo(PartnerUniversityController.class).slash(id).withRel(RelTypes.GET_SINGLE_PARTNER_UNIVERSITY).getHref() + ">; rel=\"" + RelTypes.GET_SINGLE_PARTNER_UNIVERSITY + "\";type=\"*/*\"";
+        header.add(HttpHeaders.LINK, getSingle);
     }
 
 
