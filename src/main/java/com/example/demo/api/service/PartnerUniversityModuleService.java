@@ -41,22 +41,24 @@ public class PartnerUniversityModuleService {
             Pageable paging = PageRequest.of(page, size, Sort.Direction.fromString(sortDir), sortBy);
             Page<Module> pageResult = moduleRepository.findByPartnerUniversityId(universityId, paging);
 
+            HttpHeaders headers = new HttpHeaders();
+            addPaginationLinks(headers, universityId, page, size, pageResult);
+            addSortingLinks(headers, universityId, sortDir);
+            addCrudLinksCollectionNoContent(headers);
+
             if (pageResult.isEmpty()) {
-                return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+                return new ResponseEntity<>(headers, HttpStatus.NO_CONTENT);
             }
 
             List<EntityModel<Module>> moduleResources = pageResult.getContent().stream()
                     .map(module -> EntityModel.of(module,
-                            linkTo(methodOn(PartnerUniversityModuleController.class).getModuleOfPartnerUniversityById(universityId, module.getId())).withRel(RelTypes.GET_SINGLE_MODULE_OF_PARTNER_UNIVERSITY),
-                            linkTo(PartnerUniversityController.class).slash(universityId).withRel(RelTypes.GET_SINGLE_PARTNER_UNIVERSITY)))
+                            linkTo(methodOn(PartnerUniversityModuleController.class).getModuleOfPartnerUniversityById(universityId, module.getId())).withRel(RelTypes.SELF).withType("*/*")))
                     .collect(Collectors.toList());
 
             CollectionModel<EntityModel<Module>> collectionModel = CollectionModel.of(moduleResources,
-                    linkTo(PartnerUniversityController.class).slash(universityId).slash("modules").withSelfRel());
+                    linkTo(PartnerUniversityController.class).slash(universityId).slash("modules").withSelfRel().withType("*/*"));
 
-            HttpHeaders headers = new HttpHeaders();
-            addPaginationLinks(headers, universityId, page, size, pageResult);
-            addSortingLinks(headers, universityId, sortDir);
+            addCrudLinksGetCollection(headers);
 
             return new ResponseEntity<>(collectionModel, headers, HttpStatus.OK);
         } catch (Exception ex) {
@@ -66,21 +68,22 @@ public class PartnerUniversityModuleService {
     }
 
     public ResponseEntity<EntityModel<Module>> getModuleOfPartnerUniversityById(long universityId, Long id) {
+        HttpHeaders headers = new HttpHeaders();
+        addCrudLinksGetSingle(headers);
+
         if (!partnerUniversityRepository.existsById(universityId)) {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+            return new ResponseEntity<>(headers, HttpStatus.NOT_FOUND);
         }
 
         Optional<Module> module = moduleRepository.findByIdAndPartnerUniversityId(id, universityId);
         if (!module.isPresent()) {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+            return new ResponseEntity<>(headers, HttpStatus.NOT_FOUND);
         }
+
         Module moduleModel = module.get();
         return module.map(value -> new ResponseEntity<>(EntityModel.of(value,
-                        linkTo(methodOn(PartnerUniversityModuleController.class).getModuleOfPartnerUniversityById(universityId, id)).withSelfRel(),
-                        linkTo(PartnerUniversityController.class).slash("modules").withRel(RelTypes.GET_ALL_MODULES_OF_PARTNER_UNIVERSITY),
-                        linkTo(methodOn(PartnerUniversityModuleController.class).updateModuleOfPartnerUniversity(universityId, id, moduleModel)).withRel(RelTypes.UPDATE_MODULE_OF_PARTNER_UNIVERSITY),
-                        linkTo(methodOn(PartnerUniversityModuleController.class).deleteModuleOfPartnerUniversity(universityId, id)).withRel(RelTypes.DELETE_MODULE_OF_PARTNER_UNIVERSITY)), HttpStatus.OK))
-                .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
+                        linkTo(methodOn(PartnerUniversityModuleController.class).getModuleOfPartnerUniversityById(universityId, id)).withSelfRel().withType("*/*")), headers, HttpStatus.OK))
+                .orElseGet(() -> new ResponseEntity<>(headers, HttpStatus.NOT_FOUND));
     }
 
     public ResponseEntity<EntityModel<Module>> createModuleInPartnerUniversity(Long universityId, Module module) {
@@ -92,8 +95,8 @@ public class PartnerUniversityModuleService {
         module.setPartnerUniversity(partnerUniversity.get());  // Beziehung setzen
         Module savedModule = moduleRepository.save(module);
         EntityModel<Module> moduleResource = EntityModel.of(savedModule,
-                linkTo(methodOn(PartnerUniversityModuleController.class).getModuleOfPartnerUniversityById(universityId, savedModule.getId())).withSelfRel(),
-                linkTo(PartnerUniversityController.class).slash(universityId).withRel(RelTypes.GET_SINGLE_PARTNER_UNIVERSITY));
+                linkTo(methodOn(PartnerUniversityModuleController.class).getModuleOfPartnerUniversityById(universityId, savedModule.getId())).withSelfRel().withType("*/*"),
+                linkTo(PartnerUniversityController.class).slash(universityId).withRel(RelTypes.GET_SINGLE_PARTNER_UNIVERSITY).withType("*/*"));
         return new ResponseEntity<>(moduleResource, HttpStatus.CREATED);
     }
 
@@ -114,7 +117,7 @@ public class PartnerUniversityModuleService {
         existingModule.setCreditPoints(moduleDetails.getCreditPoints());
         Module updatedModule = moduleRepository.save(existingModule);
         EntityModel<Module> moduleResource = EntityModel.of(updatedModule,
-                linkTo(methodOn(PartnerUniversityModuleController.class).getModuleOfPartnerUniversityById(universityId, updatedModule.getId())).withSelfRel());
+                linkTo(methodOn(PartnerUniversityModuleController.class).getModuleOfPartnerUniversityById(universityId, updatedModule.getId())).withSelfRel().withType("*/*"));
         return new ResponseEntity<>(moduleResource, HttpStatus.OK);
     }
 
@@ -122,6 +125,9 @@ public class PartnerUniversityModuleService {
         if (!partnerUniversityRepository.existsById(universityId)) {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
+
+        HttpHeaders headers = new HttpHeaders();
+        addCrudLinksDelete(headers);
 
         Optional<Module> module = moduleRepository.findByIdAndPartnerUniversityId(id, universityId);
         if (!module.isPresent()) {
@@ -136,21 +142,50 @@ public class PartnerUniversityModuleService {
         }
     }
 
+
+    private void addCrudLinksGetCollection(HttpHeaders header){
+        String getSingle = "<" + linkTo(PartnerUniversityController.class).withRel(RelTypes.GET_SINGLE_MODULE_OF_PARTNER_UNIVERSITY).getHref() + "/{id}" + "modules" + "/{id}" + ">; rel=\"" + RelTypes.GET_SINGLE_MODULE_OF_PARTNER_UNIVERSITY + "\";type=\"*/*\"";
+        header.add(HttpHeaders.LINK, getSingle);
+    }
+
+    private void addCrudLinksCollectionNoContent(HttpHeaders header){
+        String create = "<" + linkTo(PartnerUniversityController.class).withRel(RelTypes.CREATE_MODULE_IN_PARTNER_UNIVERSITY).getHref() + "/{id}" + "modules" + ">; rel=\"" + RelTypes.CREATE_MODULE_IN_PARTNER_UNIVERSITY + "\";type=\"application/json\"";
+        header.add(HttpHeaders.LINK, create);
+    }
+
+
+    private void addCrudLinksGetSingle(HttpHeaders header){
+        String getAllModules = "<" + linkTo(PartnerUniversityController.class).withRel(RelTypes.GET_ALL_MODULES_OF_PARTNER_UNIVERSITY).getHref() + "/{id}" + "modules" + ">; rel=\"" + RelTypes.GET_ALL_MODULES_OF_PARTNER_UNIVERSITY + "\";type=\\\"*/*\\\"\"";
+        header.add(HttpHeaders.LINK, getAllModules);
+
+        String update = "<" + linkTo(PartnerUniversityController.class).withRel(RelTypes.UPDATE_MODULE_OF_PARTNER_UNIVERSITY).getHref() + "/{id}" + "modules" + "/{id}" + ">; rel=\"" + RelTypes.UPDATE_MODULE_OF_PARTNER_UNIVERSITY + "\";type=\"application/json\"";
+        header.add(HttpHeaders.LINK, update);
+
+        String delete = "<" + linkTo(PartnerUniversityController.class).withRel(RelTypes.DELETE_MODULE_OF_PARTNER_UNIVERSITY).getHref() + "/{id}" + "modules" + "/{id}" + ">; rel=\"" + RelTypes.DELETE_MODULE_OF_PARTNER_UNIVERSITY + "\";type=\"*/*\"";
+        header.add(HttpHeaders.LINK, delete);
+    }
+
+    private void addCrudLinksDelete(HttpHeaders header){
+        String getAll = "<" + linkTo(PartnerUniversityController.class).withRel(RelTypes.GET_ALL_MODULES_OF_PARTNER_UNIVERSITY).getHref() + "/{id}" + "modules" + ">; rel=\"" + RelTypes.GET_ALL_MODULES_OF_PARTNER_UNIVERSITY + "\";type=\"*/*\"";
+        header.add(HttpHeaders.LINK, getAll);
+
+    }
+
     private void addPaginationLinks(HttpHeaders headers, long id, int page, int size, Page<Module> pageResult) {
         Link baseLink = linkTo(PartnerUniversityController.class).slash(id).slash("modules").withRel(RelTypes.GET_ALL_MODULES_OF_PARTNER_UNIVERSITY);
 
-        String urlWithPagination = "<" + baseLink.getHref() + "?page=" + page + "&size=" + size + ">; rel=\"self\";type=\"application/json\"";
+        String urlWithPagination = "<" + baseLink.getHref() + "?page=" + page + "&size=" + size + ">; rel=\"self\";type=\"*/*\"";
 
         //String selfLink = "<" + baseUrl + ">; rel=\"self\"";
         headers.add(HttpHeaders.LINK, urlWithPagination);
 
         if (pageResult.hasNext()) {
-            urlWithPagination = "<" + baseLink.getHref() + "?page=" + (page + 1) + "&size=" + size + ">; rel=\"next\";type=\"application/json\"";
+            urlWithPagination = "<" + baseLink.getHref() + "?page=" + (page + 1) + "&size=" + size + ">; rel=\"next\";type=\"*/*\"";
             headers.add(HttpHeaders.LINK, urlWithPagination);
         }
 
         if (pageResult.hasPrevious()) {
-            urlWithPagination = "<" + baseLink.getHref() + "?page=" + (page - 1) + "&size=" + size + ">; rel=\"prev\";type=\"application/json\"";
+            urlWithPagination = "<" + baseLink.getHref() + "?page=" + (page - 1) + "&size=" + size + ">; rel=\"prev\";type=\"*/*\"";
             headers.add(HttpHeaders.LINK, urlWithPagination);
         }
     }
@@ -160,10 +195,10 @@ public class PartnerUniversityModuleService {
 
 
         if(sortDir.equalsIgnoreCase("asc")){
-            String sortDescLink = "<" + baseLink.getHref() + "?sortDir=desc" + ">; rel=\"sortDesc\";type=\"application/json\"";
+            String sortDescLink = "<" + baseLink.getHref() + "?sortDir=desc" + ">; rel=\"sortDesc\";type=\"*/*\"";
             headers.add(HttpHeaders.LINK, sortDescLink);
         }else {
-            String sortAscLink = "<" + baseLink.getHref() + "?sortDir=asc" + ">; rel=\"sortAsc\";type=\"application/json\"";
+            String sortAscLink = "<" + baseLink.getHref() + "?sortDir=asc" + ">; rel=\"sortAsc\";type=\"*/*\"";
             headers.add(HttpHeaders.LINK, sortAscLink);
         }
     }

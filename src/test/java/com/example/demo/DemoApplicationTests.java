@@ -7,10 +7,12 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
+import java.util.List;
 import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -38,79 +40,95 @@ class DemoApplicationTests {
     @Test
     public void test_is_create_partner_university_allowed() {
         ResponseEntity<Map<String, String>> response = frontend.getDispatcher(port);
-        String jsonStringGetDispatcher = frontend.responseToJsonString(response);
-
-        assertThat(frontend.jsonStringContainsLink(jsonStringGetDispatcher, RelTypes.CREATE_PARTNER_UNIVERSITY)).isTrue();
+        HttpHeaders headers = response.getHeaders();
+        List<String> linkHeaders = headers.get("Link");
+        assertThat(frontend.searchForRelInResponse(linkHeaders, RelTypes.CREATE_PARTNER_UNIVERSITY)).isTrue();
     }
 
     @Test
     public void test_create_partner_university() {
         ResponseEntity<Map<String, String>> response = frontend.getDispatcher(port);
-        String jsonStringGetDispatcher = frontend.responseToJsonString(response);
-        String url = frontend.findLinkForRelInJson(jsonStringGetDispatcher, RelTypes.CREATE_PARTNER_UNIVERSITY);
+        HttpHeaders headers = response.getHeaders();
+        List<String> linkHeaders = headers.get("Link");
+        String url = frontend.getLinkFromRel(linkHeaders, RelTypes.CREATE_PARTNER_UNIVERSITY);
+        System.out.println(url);
 
         String partnerUniversityJson = "{ \"name\": \"Test University\", \"country\": \"Test Country\"," +
                 " \"department\": \"IT\", \"websiteUrl\": \"Test url\", \"contactPerson\": \"Test person\"," +
                 " \"maxOutgoingStudents\": 100, \"maxIncomingStudents\": 50, \"nextSpringSemesterStart\": \"test date\"," +
                 " \"nextAutumnSemesterStart\": \"test date 2\" }";
-        ResponseEntity<String> response2 = frontend.createPartnerUniversity(port, partnerUniversityJson);
+        ResponseEntity<String> response2 = frontend.createPartnerUniversity(url, partnerUniversityJson);
         assertThat(response2.getStatusCode()).isEqualTo(HttpStatus.CREATED);
     }
 
     @Test
     public void is_get_all_partner_universities_allowed(){
         ResponseEntity<Map<String, String>> response = frontend.getDispatcher(port);
-        String jsonStringGetDispatcher = frontend.responseToJsonString(response);
-
-        assertThat(frontend.jsonStringContainsLink(jsonStringGetDispatcher, RelTypes.GET_ALL_PARTNER_UNIVERSITIES)).isTrue();
+        HttpHeaders headers = response.getHeaders();
+        List<String> linkHeaders = headers.get("Link");
+        assertThat(frontend.searchForRelInResponse(linkHeaders, RelTypes.GET_ALL_PARTNER_UNIVERSITIES)).isTrue();
     }
 
 
     @Test
     public void test_create_5_partner_universities_and_get_all_partner_universities() {
+        ResponseEntity<Map<String, String>> response = frontend.getDispatcher(port);
+        HttpHeaders headers = response.getHeaders();
+        List<String> linkHeaders = headers.get("Link");
+        String url = frontend.getLinkFromRel(linkHeaders, RelTypes.CREATE_PARTNER_UNIVERSITY);
+        String url2 = frontend.getLinkFromRel(linkHeaders, RelTypes.GET_ALL_PARTNER_UNIVERSITIES);
 
         for (int i = 0; i < 5; i++) {
             String partnerUniversityJson = "{ \"name\": \"Test University\", \"country\": \"Test Country\"," +
                     " \"department\": \"IT\", \"websiteUrl\": \"Test url\", \"contactPerson\": \"Test person\"," +
                     " \"maxOutgoingStudents\": 100, \"maxIncomingStudents\": 50, \"nextSpringSemesterStart\": \"test date\"," +
                     " \"nextAutumnSemesterStart\": \"test date 2\" }";
-            frontend.createPartnerUniversity(port, partnerUniversityJson);
+            frontend.createPartnerUniversity(url, partnerUniversityJson);
         }
-        ResponseEntity<String> response2 = frontend.getAllPartnerUniversities(port);
+        ResponseEntity<String> response2 = frontend.getAllPartnerUniversities(url2);
         assertThat(response2.getStatusCode()).isEqualTo(HttpStatus.OK);
     }
 
 
     @Test
     public void test_is_get_single_partner_university_available() {
-        ResponseEntity<String> response2 = frontend.getAllPartnerUniversities(port);
+        ResponseEntity<Map<String, String>> response = frontend.getDispatcher(port);
+        HttpHeaders headers = response.getHeaders();
+        List<String> linkHeaders = headers.get("Link");
+        String url = frontend.getLinkFromRel(linkHeaders, RelTypes.GET_ALL_PARTNER_UNIVERSITIES);
 
-        String jsonStringGetAllPU = frontend.responseToJsonString(response2);
+        ResponseEntity<String> response2 = frontend.getAllPartnerUniversities(url);
 
-        assertThat(frontend.jsonStringContainsLink(jsonStringGetAllPU, RelTypes.GET_SINGLE_PARTNER_UNIVERSITY)).isTrue();
+        HttpHeaders headers2 = response2.getHeaders();
+
+        List<String> linkHeaders2 = headers2.get("Link");
+
+        assertThat(frontend.searchForRelInResponse(linkHeaders2, RelTypes.GET_SINGLE_PARTNER_UNIVERSITY)).isTrue();
     }
 
 
     @Test
     public void test_is_get_single_partner_university() {
+        ResponseEntity<Map<String, String>> response = frontend.getDispatcher(port);
+        HttpHeaders headers = response.getHeaders();
+        List<String> linkHeaders = headers.get("Link");
+        String url = frontend.getLinkFromRel(linkHeaders, RelTypes.CREATE_PARTNER_UNIVERSITY);
+        String url2 = frontend.getLinkFromRel(linkHeaders, RelTypes.GET_ALL_PARTNER_UNIVERSITIES);
 
         for (int i = 0; i < 5; i++) {
             String partnerUniversityJson = "{ \"name\": \"Test University\", \"country\": \"Test Country\"," +
                     " \"department\": \"IT\", \"websiteUrl\": \"Test url\", \"contactPerson\": \"Test person\"," +
                     " \"maxOutgoingStudents\": 100, \"maxIncomingStudents\": 50, \"nextSpringSemesterStart\": \"test date\"," +
                     " \"nextAutumnSemesterStart\": \"test date 2\" }";
-            frontend.createPartnerUniversity(port, partnerUniversityJson);
+            frontend.createPartnerUniversity(url, partnerUniversityJson);
         }
 
         //Get all partnerUniversities
-        ResponseEntity<String> response2 = frontend.getAllPartnerUniversities(port);
+        ResponseEntity<String> response2 = frontend.getAllPartnerUniversities(url2);
 
-        String jsonStringGetSinglePU = frontend.responseToJsonString(response2);
+        String jsonResponseString = frontend.responseToJsonString(response2);
 
-        assertThat(frontend.jsonStringContainsLink(jsonStringGetSinglePU, RelTypes.GET_SINGLE_PARTNER_UNIVERSITY)).isTrue();
-
-        //Check for single partnerUniversity Url
-        String url3 = frontend.findLinkForRelInJson(jsonStringGetSinglePU, RelTypes.GET_SINGLE_PARTNER_UNIVERSITY);
+        String url3 = frontend.findLinkForRelInJson(jsonResponseString, RelTypes.SELF);
 
         ResponseEntity<String> response3 = frontend.getPartnerUniversityById(url3);
         assertThat(response3.getStatusCode()).isEqualTo(HttpStatus.OK);
@@ -119,58 +137,65 @@ class DemoApplicationTests {
 
     @Test
     public void test_update_partner_university_is_available() {
+        ResponseEntity<Map<String, String>> response = frontend.getDispatcher(port);
+        HttpHeaders headers = response.getHeaders();
+        List<String> linkHeaders = headers.get("Link");
+        String url = frontend.getLinkFromRel(linkHeaders, RelTypes.CREATE_PARTNER_UNIVERSITY);
+        String url2 = frontend.getLinkFromRel(linkHeaders, RelTypes.GET_ALL_PARTNER_UNIVERSITIES);
 
         for (int i = 0; i < 5; i++) {
             String partnerUniversityJson = "{ \"name\": \"Test University\", \"country\": \"Test Country\"," +
                     " \"department\": \"IT\", \"websiteUrl\": \"Test url\", \"contactPerson\": \"Test person\"," +
                     " \"maxOutgoingStudents\": 100, \"maxIncomingStudents\": 50, \"nextSpringSemesterStart\": \"test date\"," +
                     " \"nextAutumnSemesterStart\": \"test date 2\" }";
-            frontend.createPartnerUniversity(port, partnerUniversityJson);
+            frontend.createPartnerUniversity(url, partnerUniversityJson);
         }
 
         //Get all partnerUniversities
-        ResponseEntity<String> response2 = frontend.getAllPartnerUniversities(port);
+        ResponseEntity<String> response2 = frontend.getAllPartnerUniversities(url2);
 
-        String jsonStringGetSinglePU = frontend.responseToJsonString(response2);
+        String jsonResponseString = frontend.responseToJsonString(response2);
 
-        //Check for single partnerUniversity Url
-        String url3 = frontend.findLinkForRelInJson(jsonStringGetSinglePU, RelTypes.GET_SINGLE_PARTNER_UNIVERSITY);
+        String url3 = frontend.findLinkForRelInJson(jsonResponseString, RelTypes.SELF);
 
         ResponseEntity<String> response3 = frontend.getPartnerUniversityById(url3);
-        assertThat(response3.getStatusCode()).isEqualTo(HttpStatus.OK);
 
-        String jsonStringUpdatePU = frontend.responseToJsonString(response3);
+        HttpHeaders headers3 = response3.getHeaders();
 
-        assertThat(frontend.jsonStringContainsLink(jsonStringUpdatePU, RelTypes.UPDATE_SINGLE_PARTNER_UNIVERSITY)).isTrue();
+        List<String> linkHeaders3 = headers3.get("Link");
+
+        assertThat(frontend.searchForRelInResponse(linkHeaders3, RelTypes.UPDATE_SINGLE_PARTNER_UNIVERSITY)).isTrue();
+
     }
 
 
     @Test
     public void test_update_partner_university() {
+        ResponseEntity<Map<String, String>> response = frontend.getDispatcher(port);
+        HttpHeaders headers = response.getHeaders();
+        List<String> linkHeaders = headers.get("Link");
+        String url = frontend.getLinkFromRel(linkHeaders, RelTypes.CREATE_PARTNER_UNIVERSITY);
+        String url2 = frontend.getLinkFromRel(linkHeaders, RelTypes.GET_ALL_PARTNER_UNIVERSITIES);
 
         for (int i = 0; i < 5; i++) {
             String partnerUniversityJson = "{ \"name\": \"Test University\", \"country\": \"Test Country\"," +
                     " \"department\": \"IT\", \"websiteUrl\": \"Test url\", \"contactPerson\": \"Test person\"," +
                     " \"maxOutgoingStudents\": 100, \"maxIncomingStudents\": 50, \"nextSpringSemesterStart\": \"test date\"," +
                     " \"nextAutumnSemesterStart\": \"test date 2\" }";
-            frontend.createPartnerUniversity(port, partnerUniversityJson);
+            frontend.createPartnerUniversity(url, partnerUniversityJson);
         }
 
-        //Get all partnerUniversities
-        ResponseEntity<String> response2 = frontend.getAllPartnerUniversities(port);
+        ResponseEntity<String> response2 = frontend.getAllPartnerUniversities(url2);
 
-        String jsonStringGetSinglePU = frontend.responseToJsonString(response2);
+        String jsonResponseString = frontend.responseToJsonString(response2);
 
-        //Check for single partnerUniversity Url
-        String url3 = frontend.findLinkForRelInJson(jsonStringGetSinglePU, RelTypes.GET_SINGLE_PARTNER_UNIVERSITY);
+        String url3 = frontend.findLinkForRelInJson(jsonResponseString, RelTypes.SELF);
 
         ResponseEntity<String> response3 = frontend.getPartnerUniversityById(url3);
 
-        String jsonStringUpdatePU = frontend.responseToJsonString(response3);
+        String jsonResponseString2 = frontend.responseToJsonString(response3);
 
-        assertThat(frontend.jsonStringContainsLink(jsonStringUpdatePU, RelTypes.UPDATE_SINGLE_PARTNER_UNIVERSITY)).isTrue();
-
-        String url4 = frontend.findLinkForRelInJson(jsonStringUpdatePU, RelTypes.UPDATE_SINGLE_PARTNER_UNIVERSITY);
+        String url4 = frontend.findLinkForRelInJson(jsonResponseString2, RelTypes.SELF);
 
         String partnerUniversityUpdatedJson = "{ \"name\": \"Test University Updated\", \"country\": \"Test Country\"," +
                 " \"department\": \"IT\", \"websiteUrl\": \"Test url\", \"contactPerson\": \"Test person\"," +
@@ -183,56 +208,67 @@ class DemoApplicationTests {
 
 
     @Test
-    public void test_delete_partner_university_available() {
+    public void test_delete_partner_university_allowed() {
+        ResponseEntity<Map<String, String>> response = frontend.getDispatcher(port);
+        HttpHeaders headers = response.getHeaders();
+        List<String> linkHeaders = headers.get("Link");
+        String url = frontend.getLinkFromRel(linkHeaders, RelTypes.CREATE_PARTNER_UNIVERSITY);
+        String url2 = frontend.getLinkFromRel(linkHeaders, RelTypes.GET_ALL_PARTNER_UNIVERSITIES);
 
         for (int i = 0; i < 5; i++) {
             String partnerUniversityJson = "{ \"name\": \"Test University\", \"country\": \"Test Country\"," +
                     " \"department\": \"IT\", \"websiteUrl\": \"Test url\", \"contactPerson\": \"Test person\"," +
                     " \"maxOutgoingStudents\": 100, \"maxIncomingStudents\": 50, \"nextSpringSemesterStart\": \"test date\"," +
                     " \"nextAutumnSemesterStart\": \"test date 2\" }";
-            frontend.createPartnerUniversity(port, partnerUniversityJson);
+            frontend.createPartnerUniversity(url, partnerUniversityJson);
         }
 
-        //Get all partnerUniversities
-        ResponseEntity<String> response2 = frontend.getAllPartnerUniversities(port);
+        ResponseEntity<String> response2 = frontend.getAllPartnerUniversities(url2);
 
-        String jsonStringGetSinglePU = frontend.responseToJsonString(response2);
+        String jsonResponseString = frontend.responseToJsonString(response2);
 
-        //Check for single partnerUniversity Url
-        String url3 = frontend.findLinkForRelInJson(jsonStringGetSinglePU, RelTypes.GET_SINGLE_PARTNER_UNIVERSITY);
+        String url3 = frontend.findLinkForRelInJson(jsonResponseString, RelTypes.SELF);
 
         ResponseEntity<String> response3 = frontend.getPartnerUniversityById(url3);
-        assertThat(response3.getStatusCode()).isEqualTo(HttpStatus.OK);
 
-        String jsonStringUpdatePU = frontend.responseToJsonString(response3);
+        HttpHeaders headers3 = response3.getHeaders();
 
-        assertThat(frontend.jsonStringContainsLink(jsonStringUpdatePU, RelTypes.DELETE_SINGLE_PARTNER_UNIVERSITY)).isTrue();
+        List<String> linkHeaders3 = headers3.get("Link");
+
+        assertThat(frontend.searchForRelInResponse(linkHeaders3, RelTypes.DELETE_SINGLE_PARTNER_UNIVERSITY)).isTrue();
     }
 
 
     @Test
     public void test_delete_partner_university() {
+        ResponseEntity<Map<String, String>> response = frontend.getDispatcher(port);
+        HttpHeaders headers = response.getHeaders();
+        List<String> linkHeaders = headers.get("Link");
+        String url = frontend.getLinkFromRel(linkHeaders, RelTypes.CREATE_PARTNER_UNIVERSITY);
+        String url2 = frontend.getLinkFromRel(linkHeaders, RelTypes.GET_ALL_PARTNER_UNIVERSITIES);
 
         for (int i = 0; i < 5; i++) {
             String partnerUniversityJson = "{ \"name\": \"Test University\", \"country\": \"Test Country\"," +
                     " \"department\": \"IT\", \"websiteUrl\": \"Test url\", \"contactPerson\": \"Test person\"," +
                     " \"maxOutgoingStudents\": 100, \"maxIncomingStudents\": 50, \"nextSpringSemesterStart\": \"test date\"," +
                     " \"nextAutumnSemesterStart\": \"test date 2\" }";
-            frontend.createPartnerUniversity(port, partnerUniversityJson);
+            frontend.createPartnerUniversity(url, partnerUniversityJson);
         }
 
-        //Get all partnerUniversities
-        ResponseEntity<String> response2 = frontend.getAllPartnerUniversities(port);
+        ResponseEntity<String> response2 = frontend.getAllPartnerUniversities(url2);
 
-        String jsonStringGetSinglePU = frontend.responseToJsonString(response2);
+        String jsonResponseString = frontend.responseToJsonString(response2);
 
-        assertThat(frontend.jsonStringContainsLink(jsonStringGetSinglePU, RelTypes.GET_SINGLE_PARTNER_UNIVERSITY)).isTrue();
+        String url3 = frontend.findLinkForRelInJson(jsonResponseString, RelTypes.SELF);
 
-        //Check for single partnerUniversity Url
-        String url3 = frontend.findLinkForRelInJson(jsonStringGetSinglePU, RelTypes.GET_SINGLE_PARTNER_UNIVERSITY);
+        ResponseEntity<String> response3 = frontend.getPartnerUniversityById(url3);
 
-        ResponseEntity<Void> response3 = frontend.deletePartnerUniversity(url3);
-        assertThat(response3.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
+        String jsonResponseString2 = frontend.responseToJsonString(response3);
+
+        String url4 = frontend.findLinkForRelInJson(jsonResponseString2, RelTypes.SELF);
+
+        ResponseEntity<Void> response4 = frontend.deletePartnerUniversity(url4);
+        assertThat(response4.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
     }
 
 
@@ -241,60 +277,63 @@ class DemoApplicationTests {
 
     @Test
     public void test_create_module_in_partner_university_allowed() {
+        ResponseEntity<Map<String, String>> response = frontend.getDispatcher(port);
+        HttpHeaders headers = response.getHeaders();
+        List<String> linkHeaders = headers.get("Link");
+        String url = frontend.getLinkFromRel(linkHeaders, RelTypes.CREATE_PARTNER_UNIVERSITY);
+        String url2 = frontend.getLinkFromRel(linkHeaders, RelTypes.GET_ALL_PARTNER_UNIVERSITIES);
 
         for (int i = 0; i < 5; i++) {
             String partnerUniversityJson = "{ \"name\": \"Test University\", \"country\": \"Test Country\"," +
                     " \"department\": \"IT\", \"websiteUrl\": \"Test url\", \"contactPerson\": \"Test person\"," +
                     " \"maxOutgoingStudents\": 100, \"maxIncomingStudents\": 50, \"nextSpringSemesterStart\": \"test date\"," +
                     " \"nextAutumnSemesterStart\": \"test date 2\" }";
-            frontend.createPartnerUniversity(port, partnerUniversityJson);
+            frontend.createPartnerUniversity(url, partnerUniversityJson);
         }
 
-        //Get all partnerUniversities
-        ResponseEntity<String> response2 = frontend.getAllPartnerUniversities(port);
+        ResponseEntity<String> response2 = frontend.getAllPartnerUniversities(url2);
 
-        String jsonStringGetSinglePU = frontend.responseToJsonString(response2);
+        String jsonResponseString = frontend.responseToJsonString(response2);
 
-        assertThat(frontend.jsonStringContainsLink(jsonStringGetSinglePU, RelTypes.GET_SINGLE_PARTNER_UNIVERSITY)).isTrue();
-
-        //Check for single partnerUniversity Url
-        String url3 = frontend.findLinkForRelInJson(jsonStringGetSinglePU, RelTypes.GET_SINGLE_PARTNER_UNIVERSITY);
+        String url3 = frontend.findLinkForRelInJson(jsonResponseString, RelTypes.SELF);
 
         ResponseEntity<String> response3 = frontend.getPartnerUniversityById(url3);
-        assertThat(response3.getStatusCode()).isEqualTo(HttpStatus.OK);
 
-        String jsonStringCreateModule = frontend.responseToJsonString(response3);
+        HttpHeaders headers3 = response3.getHeaders();
 
-        assertThat(frontend.jsonStringContainsLink(jsonStringCreateModule, RelTypes.CREATE_MODULE_IN_PARTNER_UNIVERSITY)).isTrue();
+        List<String> linkHeaders3 = headers3.get("Link");
 
+        assertThat(frontend.searchForRelInResponse(linkHeaders3, RelTypes.CREATE_MODULE_IN_PARTNER_UNIVERSITY)).isTrue();
     }
 
 
     @Test
     public void test_create_module_of_partner_university() {
+        ResponseEntity<Map<String, String>> response = frontend.getDispatcher(port);
+        HttpHeaders headers = response.getHeaders();
+        List<String> linkHeaders = headers.get("Link");
+        String url = frontend.getLinkFromRel(linkHeaders, RelTypes.CREATE_PARTNER_UNIVERSITY);
+        String url2 = frontend.getLinkFromRel(linkHeaders, RelTypes.GET_ALL_PARTNER_UNIVERSITIES);
 
         for (int i = 0; i < 5; i++) {
             String partnerUniversityJson = "{ \"name\": \"Test University\", \"country\": \"Test Country\"," +
                     " \"department\": \"IT\", \"websiteUrl\": \"Test url\", \"contactPerson\": \"Test person\"," +
                     " \"maxOutgoingStudents\": 100, \"maxIncomingStudents\": 50, \"nextSpringSemesterStart\": \"test date\"," +
                     " \"nextAutumnSemesterStart\": \"test date 2\" }";
-            frontend.createPartnerUniversity(port, partnerUniversityJson);
+            frontend.createPartnerUniversity(url, partnerUniversityJson);
         }
 
-        //Get all partnerUniversities
-        ResponseEntity<String> response2 = frontend.getAllPartnerUniversities(port);
+        ResponseEntity<String> response2 = frontend.getAllPartnerUniversities(url2);
 
-        String jsonStringGetSinglePU = frontend.responseToJsonString(response2);
+        String jsonResponseString = frontend.responseToJsonString(response2);
 
-        assertThat(frontend.jsonStringContainsLink(jsonStringGetSinglePU, RelTypes.GET_SINGLE_PARTNER_UNIVERSITY)).isTrue();
-
-        //Check for single partnerUniversity Url
-        String url3 = frontend.findLinkForRelInJson(jsonStringGetSinglePU, RelTypes.GET_SINGLE_PARTNER_UNIVERSITY);
+        String url3 = frontend.findLinkForRelInJson(jsonResponseString, RelTypes.SELF);
 
         ResponseEntity<String> response3 = frontend.getPartnerUniversityById(url3);
 
-        String jsonStringCreateModule = frontend.responseToJsonString(response3);
-        String url4 = frontend.findLinkForRelInJson(jsonStringCreateModule, RelTypes.CREATE_MODULE_IN_PARTNER_UNIVERSITY);
+        String jsonResponseString2 = frontend.responseToJsonString(response3);
+
+        String url4 = frontend.findLinkForRelInJson(jsonResponseString2, RelTypes.GET_ALL_MODULES_OF_PARTNER_UNIVERSITY);
 
         String moduleJson = "{ \"name\": \"Test module\", \"semester\": 2," + " \"creditPoints\": 7}";
 
@@ -305,54 +344,62 @@ class DemoApplicationTests {
 
     @Test
     public void test_get_all_modules_of_partner_university_allowed() {
+        ResponseEntity<Map<String, String>> response = frontend.getDispatcher(port);
+        HttpHeaders headers = response.getHeaders();
+        List<String> linkHeaders = headers.get("Link");
+        String url = frontend.getLinkFromRel(linkHeaders, RelTypes.CREATE_PARTNER_UNIVERSITY);
+        String url2 = frontend.getLinkFromRel(linkHeaders, RelTypes.GET_ALL_PARTNER_UNIVERSITIES);
 
         for (int i = 0; i < 5; i++) {
             String partnerUniversityJson = "{ \"name\": \"Test University\", \"country\": \"Test Country\"," +
                     " \"department\": \"IT\", \"websiteUrl\": \"Test url\", \"contactPerson\": \"Test person\"," +
                     " \"maxOutgoingStudents\": 100, \"maxIncomingStudents\": 50, \"nextSpringSemesterStart\": \"test date\"," +
                     " \"nextAutumnSemesterStart\": \"test date 2\" }";
-            frontend.createPartnerUniversity(port, partnerUniversityJson);
+            frontend.createPartnerUniversity(url, partnerUniversityJson);
         }
 
-        //Get all partnerUniversities
-        ResponseEntity<String> response2 = frontend.getAllPartnerUniversities(port);
+        ResponseEntity<String> response2 = frontend.getAllPartnerUniversities(url2);
 
-        String jsonStringGetSinglePU = frontend.responseToJsonString(response2);
+        String jsonResponseString = frontend.responseToJsonString(response2);
 
-        //Check for single partnerUniversity Url
-        String url3 = frontend.findLinkForRelInJson(jsonStringGetSinglePU, RelTypes.GET_SINGLE_PARTNER_UNIVERSITY);
+        String url3 = frontend.findLinkForRelInJson(jsonResponseString, RelTypes.SELF);
 
         ResponseEntity<String> response3 = frontend.getPartnerUniversityById(url3);
-        assertThat(response3.getStatusCode()).isEqualTo(HttpStatus.OK);
 
-        String jsonStringGetAllPModules = frontend.responseToJsonString(response3);
-        assertThat(frontend.jsonStringContainsLink(jsonStringGetAllPModules, RelTypes.GET_ALL_MODULES_OF_PARTNER_UNIVERSITY)).isTrue();
+        HttpHeaders headers3 = response3.getHeaders();
+
+        List<String> linkHeaders3 = headers3.get("Link");
+
+        assertThat(frontend.searchForRelInResponse(linkHeaders3, RelTypes.GET_ALL_MODULES_OF_PARTNER_UNIVERSITY)).isTrue();
     }
 
     @Test
     public void test_get_all_modules_of_partner_university() {
+        ResponseEntity<Map<String, String>> response = frontend.getDispatcher(port);
+        HttpHeaders headers = response.getHeaders();
+        List<String> linkHeaders = headers.get("Link");
+        String url = frontend.getLinkFromRel(linkHeaders, RelTypes.CREATE_PARTNER_UNIVERSITY);
+        String url2 = frontend.getLinkFromRel(linkHeaders, RelTypes.GET_ALL_PARTNER_UNIVERSITIES);
 
         for (int i = 0; i < 5; i++) {
             String partnerUniversityJson = "{ \"name\": \"Test University\", \"country\": \"Test Country\"," +
                     " \"department\": \"IT\", \"websiteUrl\": \"Test url\", \"contactPerson\": \"Test person\"," +
                     " \"maxOutgoingStudents\": 100, \"maxIncomingStudents\": 50, \"nextSpringSemesterStart\": \"test date\"," +
                     " \"nextAutumnSemesterStart\": \"test date 2\" }";
-            frontend.createPartnerUniversity(port, partnerUniversityJson);
+            frontend.createPartnerUniversity(url, partnerUniversityJson);
         }
 
-        //Get all partnerUniversities
-        ResponseEntity<String> response2 = frontend.getAllPartnerUniversities(port);
+        ResponseEntity<String> response2 = frontend.getAllPartnerUniversities(url2);
 
-        String jsonStringGetSinglePU = frontend.responseToJsonString(response2);
+        String jsonResponseString = frontend.responseToJsonString(response2);
 
-        //Check for single partnerUniversity Url
-        String url3 = frontend.findLinkForRelInJson(jsonStringGetSinglePU, RelTypes.GET_SINGLE_PARTNER_UNIVERSITY);
+        String url3 = frontend.findLinkForRelInJson(jsonResponseString, RelTypes.SELF);
 
         ResponseEntity<String> response3 = frontend.getPartnerUniversityById(url3);
 
-        String jsonStringGetAllPModules = frontend.responseToJsonString(response3);
+        String jsonResponseString2 = frontend.responseToJsonString(response3);
 
-        String url4 = frontend.findLinkForRelInJson(jsonStringGetAllPModules, RelTypes.CREATE_MODULE_IN_PARTNER_UNIVERSITY);
+        String url4 = frontend.findLinkForRelInJson(jsonResponseString2, RelTypes.GET_ALL_MODULES_OF_PARTNER_UNIVERSITY);
 
         String moduleJson = "{ \"name\": \"Test module\", \"semester\": 2," + " \"creditPoints\": 7}";
 
@@ -365,28 +412,31 @@ class DemoApplicationTests {
 
     @Test
     public void test_get_single_module_of_partner_university_allowed() {
+        ResponseEntity<Map<String, String>> response = frontend.getDispatcher(port);
+        HttpHeaders headers = response.getHeaders();
+        List<String> linkHeaders = headers.get("Link");
+        String url = frontend.getLinkFromRel(linkHeaders, RelTypes.CREATE_PARTNER_UNIVERSITY);
+        String url2 = frontend.getLinkFromRel(linkHeaders, RelTypes.GET_ALL_PARTNER_UNIVERSITIES);
 
         for (int i = 0; i < 5; i++) {
             String partnerUniversityJson = "{ \"name\": \"Test University\", \"country\": \"Test Country\"," +
                     " \"department\": \"IT\", \"websiteUrl\": \"Test url\", \"contactPerson\": \"Test person\"," +
                     " \"maxOutgoingStudents\": 100, \"maxIncomingStudents\": 50, \"nextSpringSemesterStart\": \"test date\"," +
                     " \"nextAutumnSemesterStart\": \"test date 2\" }";
-            frontend.createPartnerUniversity(port, partnerUniversityJson);
+            frontend.createPartnerUniversity(url, partnerUniversityJson);
         }
 
-        //Get all partnerUniversities
-        ResponseEntity<String> response2 = frontend.getAllPartnerUniversities(port);
+        ResponseEntity<String> response2 = frontend.getAllPartnerUniversities(url2);
 
-        String jsonStringGetSinglePU = frontend.responseToJsonString(response2);
+        String jsonResponseString = frontend.responseToJsonString(response2);
 
-        //Check for single partnerUniversity Url
-        String url3 = frontend.findLinkForRelInJson(jsonStringGetSinglePU, RelTypes.GET_SINGLE_PARTNER_UNIVERSITY);
+        String url3 = frontend.findLinkForRelInJson(jsonResponseString, RelTypes.SELF);
 
         ResponseEntity<String> response3 = frontend.getPartnerUniversityById(url3);
 
-        String jsonStringGetAllPModules = frontend.responseToJsonString(response3);
+        String jsonResponseString2 = frontend.responseToJsonString(response3);
 
-        String url4 = frontend.findLinkForRelInJson(jsonStringGetAllPModules, RelTypes.CREATE_MODULE_IN_PARTNER_UNIVERSITY);
+        String url4 = frontend.findLinkForRelInJson(jsonResponseString2, RelTypes.GET_ALL_MODULES_OF_PARTNER_UNIVERSITY);
 
         String moduleJson = "{ \"name\": \"Test module\", \"semester\": 2," + " \"creditPoints\": 7}";
 
@@ -394,36 +444,41 @@ class DemoApplicationTests {
 
         ResponseEntity<String> response5 = frontend.getAllModulesForPartnerUniversity(url4);
 
-        String jsonStringGetSingleModule = frontend.responseToJsonString(response5);
+        HttpHeaders headers4 = response5.getHeaders();
 
-        assertThat(frontend.jsonStringContainsLink(jsonStringGetSingleModule, RelTypes.GET_SINGLE_MODULE_OF_PARTNER_UNIVERSITY)).isTrue();
+        List<String> linkHeaders4 = headers4.get("Link");
+
+        assertThat(frontend.searchForRelInResponse(linkHeaders4, RelTypes.GET_SINGLE_MODULE_OF_PARTNER_UNIVERSITY)).isTrue();
     }
 
 
     @Test
     public void test_get_single_module_of_partner_university() {
+        ResponseEntity<Map<String, String>> response = frontend.getDispatcher(port);
+        HttpHeaders headers = response.getHeaders();
+        List<String> linkHeaders = headers.get("Link");
+        String url = frontend.getLinkFromRel(linkHeaders, RelTypes.CREATE_PARTNER_UNIVERSITY);
+        String url2 = frontend.getLinkFromRel(linkHeaders, RelTypes.GET_ALL_PARTNER_UNIVERSITIES);
 
         for (int i = 0; i < 5; i++) {
             String partnerUniversityJson = "{ \"name\": \"Test University\", \"country\": \"Test Country\"," +
                     " \"department\": \"IT\", \"websiteUrl\": \"Test url\", \"contactPerson\": \"Test person\"," +
                     " \"maxOutgoingStudents\": 100, \"maxIncomingStudents\": 50, \"nextSpringSemesterStart\": \"test date\"," +
                     " \"nextAutumnSemesterStart\": \"test date 2\" }";
-            frontend.createPartnerUniversity(port, partnerUniversityJson);
+            frontend.createPartnerUniversity(url, partnerUniversityJson);
         }
 
-        //Get all partnerUniversities
-        ResponseEntity<String> response2 = frontend.getAllPartnerUniversities(port);
+        ResponseEntity<String> response2 = frontend.getAllPartnerUniversities(url2);
 
-        String jsonStringGetSinglePU = frontend.responseToJsonString(response2);
+        String jsonResponseString = frontend.responseToJsonString(response2);
 
-        //Check for single partnerUniversity Url
-        String url3 = frontend.findLinkForRelInJson(jsonStringGetSinglePU, RelTypes.GET_SINGLE_PARTNER_UNIVERSITY);
+        String url3 = frontend.findLinkForRelInJson(jsonResponseString, RelTypes.SELF);
 
         ResponseEntity<String> response3 = frontend.getPartnerUniversityById(url3);
 
-        String jsonStringGetAllPModules = frontend.responseToJsonString(response3);
+        String jsonResponseString2 = frontend.responseToJsonString(response3);
 
-        String url4 = frontend.findLinkForRelInJson(jsonStringGetAllPModules, RelTypes.CREATE_MODULE_IN_PARTNER_UNIVERSITY);
+        String url4 = frontend.findLinkForRelInJson(jsonResponseString2, RelTypes.GET_ALL_MODULES_OF_PARTNER_UNIVERSITY);
 
         String moduleJson = "{ \"name\": \"Test module\", \"semester\": 2," + " \"creditPoints\": 7}";
 
@@ -431,38 +486,42 @@ class DemoApplicationTests {
 
         ResponseEntity<String> response5 = frontend.getAllModulesForPartnerUniversity(url4);
 
-        String jsonStringGetSingleModule = frontend.responseToJsonString(response5);
+        String jsonResponseString3 = frontend.responseToJsonString(response5);
 
-        String url5 = frontend.findLinkForRelInJson(jsonStringGetSingleModule, RelTypes.GET_SINGLE_MODULE_OF_PARTNER_UNIVERSITY);
-        ResponseEntity<String> response6 = frontend.getModuleOfPartnerUniversity(url5);
+        String url6 = frontend.findLinkForRelInJson(jsonResponseString3, RelTypes.SELF);
+
+        ResponseEntity<String> response6 = frontend.getModuleOfPartnerUniversity(url6);
         assertThat(response6.getStatusCode()).isEqualTo(HttpStatus.OK);
     }
 
 
     @Test
     public void test_update_single_module_of_partner_university_allowed() {
+        ResponseEntity<Map<String, String>> response = frontend.getDispatcher(port);
+        HttpHeaders headers = response.getHeaders();
+        List<String> linkHeaders = headers.get("Link");
+        String url = frontend.getLinkFromRel(linkHeaders, RelTypes.CREATE_PARTNER_UNIVERSITY);
+        String url2 = frontend.getLinkFromRel(linkHeaders, RelTypes.GET_ALL_PARTNER_UNIVERSITIES);
 
         for (int i = 0; i < 5; i++) {
             String partnerUniversityJson = "{ \"name\": \"Test University\", \"country\": \"Test Country\"," +
                     " \"department\": \"IT\", \"websiteUrl\": \"Test url\", \"contactPerson\": \"Test person\"," +
                     " \"maxOutgoingStudents\": 100, \"maxIncomingStudents\": 50, \"nextSpringSemesterStart\": \"test date\"," +
                     " \"nextAutumnSemesterStart\": \"test date 2\" }";
-            frontend.createPartnerUniversity(port, partnerUniversityJson);
+            frontend.createPartnerUniversity(url, partnerUniversityJson);
         }
 
-        //Get all partnerUniversities
-        ResponseEntity<String> response2 = frontend.getAllPartnerUniversities(port);
+        ResponseEntity<String> response2 = frontend.getAllPartnerUniversities(url2);
 
-        String jsonStringGetSinglePU = frontend.responseToJsonString(response2);
+        String jsonResponseString = frontend.responseToJsonString(response2);
 
-        //Check for single partnerUniversity Url
-        String url3 = frontend.findLinkForRelInJson(jsonStringGetSinglePU, RelTypes.GET_SINGLE_PARTNER_UNIVERSITY);
+        String url3 = frontend.findLinkForRelInJson(jsonResponseString, RelTypes.SELF);
 
         ResponseEntity<String> response3 = frontend.getPartnerUniversityById(url3);
 
-        String jsonStringGetAllPModules = frontend.responseToJsonString(response3);
+        String jsonResponseString2 = frontend.responseToJsonString(response3);
 
-        String url4 = frontend.findLinkForRelInJson(jsonStringGetAllPModules, RelTypes.CREATE_MODULE_IN_PARTNER_UNIVERSITY);
+        String url4 = frontend.findLinkForRelInJson(jsonResponseString2, RelTypes.GET_ALL_MODULES_OF_PARTNER_UNIVERSITY);
 
         String moduleJson = "{ \"name\": \"Test module\", \"semester\": 2," + " \"creditPoints\": 7}";
 
@@ -470,41 +529,47 @@ class DemoApplicationTests {
 
         ResponseEntity<String> response5 = frontend.getAllModulesForPartnerUniversity(url4);
 
-        String jsonStringGetSingleModule = frontend.responseToJsonString(response5);
+        String jsonResponseString3 = frontend.responseToJsonString(response5);
 
-        String url5 = frontend.findLinkForRelInJson(jsonStringGetSingleModule, RelTypes.GET_SINGLE_MODULE_OF_PARTNER_UNIVERSITY);
+        String url5 = frontend.findLinkForRelInJson(jsonResponseString3, RelTypes.SELF);
+
         ResponseEntity<String> response6 = frontend.getModuleOfPartnerUniversity(url5);
 
-        String jsonStringUpdateModule = frontend.responseToJsonString(response6);
+        HttpHeaders headers5 = response6.getHeaders();
 
-        assertThat(frontend.jsonStringContainsLink(jsonStringUpdateModule, RelTypes.UPDATE_MODULE_OF_PARTNER_UNIVERSITY)).isTrue();
+        List<String> linkHeaders5 = headers5.get("Link");
+
+        assertThat(frontend.searchForRelInResponse(linkHeaders5, RelTypes.UPDATE_MODULE_OF_PARTNER_UNIVERSITY)).isTrue();
     }
 
 
     @Test
     public void test_update_single_module_of_partner_university() {
+        ResponseEntity<Map<String, String>> response = frontend.getDispatcher(port);
+        HttpHeaders headers = response.getHeaders();
+        List<String> linkHeaders = headers.get("Link");
+        String url = frontend.getLinkFromRel(linkHeaders, RelTypes.CREATE_PARTNER_UNIVERSITY);
+        String url2 = frontend.getLinkFromRel(linkHeaders, RelTypes.GET_ALL_PARTNER_UNIVERSITIES);
 
         for (int i = 0; i < 5; i++) {
             String partnerUniversityJson = "{ \"name\": \"Test University\", \"country\": \"Test Country\"," +
                     " \"department\": \"IT\", \"websiteUrl\": \"Test url\", \"contactPerson\": \"Test person\"," +
                     " \"maxOutgoingStudents\": 100, \"maxIncomingStudents\": 50, \"nextSpringSemesterStart\": \"test date\"," +
                     " \"nextAutumnSemesterStart\": \"test date 2\" }";
-            frontend.createPartnerUniversity(port, partnerUniversityJson);
+            frontend.createPartnerUniversity(url, partnerUniversityJson);
         }
 
-        //Get all partnerUniversities
-        ResponseEntity<String> response2 = frontend.getAllPartnerUniversities(port);
+        ResponseEntity<String> response2 = frontend.getAllPartnerUniversities(url2);
 
-        String jsonStringGetSinglePU = frontend.responseToJsonString(response2);
+        String jsonResponseString = frontend.responseToJsonString(response2);
 
-        //Check for single partnerUniversity Url
-        String url3 = frontend.findLinkForRelInJson(jsonStringGetSinglePU, RelTypes.GET_SINGLE_PARTNER_UNIVERSITY);
+        String url3 = frontend.findLinkForRelInJson(jsonResponseString, RelTypes.SELF);
 
         ResponseEntity<String> response3 = frontend.getPartnerUniversityById(url3);
 
-        String jsonStringGetAllPModules = frontend.responseToJsonString(response3);
+        String jsonResponseString2 = frontend.responseToJsonString(response3);
 
-        String url4 = frontend.findLinkForRelInJson(jsonStringGetAllPModules, RelTypes.CREATE_MODULE_IN_PARTNER_UNIVERSITY);
+        String url4 = frontend.findLinkForRelInJson(jsonResponseString2, RelTypes.GET_ALL_MODULES_OF_PARTNER_UNIVERSITY);
 
         String moduleJson = "{ \"name\": \"Test module\", \"semester\": 2," + " \"creditPoints\": 7}";
 
@@ -512,14 +577,15 @@ class DemoApplicationTests {
 
         ResponseEntity<String> response5 = frontend.getAllModulesForPartnerUniversity(url4);
 
-        String jsonStringGetSingleModule = frontend.responseToJsonString(response5);
+        String jsonResponseString3 = frontend.responseToJsonString(response5);
 
-        String url5 = frontend.findLinkForRelInJson(jsonStringGetSingleModule, RelTypes.GET_SINGLE_MODULE_OF_PARTNER_UNIVERSITY);
+        String url5 = frontend.findLinkForRelInJson(jsonResponseString3, RelTypes.SELF);
+
         ResponseEntity<String> response6 = frontend.getModuleOfPartnerUniversity(url5);
 
-        String jsonStringUpdateModule = frontend.responseToJsonString(response6);
+        String jsonResponseString4 = frontend.responseToJsonString(response6);
 
-        String url6 = frontend.findLinkForRelInJson(jsonStringUpdateModule, RelTypes.UPDATE_MODULE_OF_PARTNER_UNIVERSITY);
+        String url6 = frontend.findLinkForRelInJson(jsonResponseString4, RelTypes.SELF);
 
         String updatedModuleJson = "{ \"name\": \"Test module updated\", \"semester\": 3," + " \"creditPoints\": 7}";
 
@@ -530,28 +596,31 @@ class DemoApplicationTests {
 
     @Test
     public void test_delete_single_module_of_partner_university_allowed() {
+        ResponseEntity<Map<String, String>> response = frontend.getDispatcher(port);
+        HttpHeaders headers = response.getHeaders();
+        List<String> linkHeaders = headers.get("Link");
+        String url = frontend.getLinkFromRel(linkHeaders, RelTypes.CREATE_PARTNER_UNIVERSITY);
+        String url2 = frontend.getLinkFromRel(linkHeaders, RelTypes.GET_ALL_PARTNER_UNIVERSITIES);
 
         for (int i = 0; i < 5; i++) {
             String partnerUniversityJson = "{ \"name\": \"Test University\", \"country\": \"Test Country\"," +
                     " \"department\": \"IT\", \"websiteUrl\": \"Test url\", \"contactPerson\": \"Test person\"," +
                     " \"maxOutgoingStudents\": 100, \"maxIncomingStudents\": 50, \"nextSpringSemesterStart\": \"test date\"," +
                     " \"nextAutumnSemesterStart\": \"test date 2\" }";
-            frontend.createPartnerUniversity(port, partnerUniversityJson);
+            frontend.createPartnerUniversity(url, partnerUniversityJson);
         }
 
-        //Get all partnerUniversities
-        ResponseEntity<String> response2 = frontend.getAllPartnerUniversities(port);
+        ResponseEntity<String> response2 = frontend.getAllPartnerUniversities(url2);
 
-        String jsonStringGetSinglePU = frontend.responseToJsonString(response2);
+        String jsonResponseString = frontend.responseToJsonString(response2);
 
-        //Check for single partnerUniversity Url
-        String url3 = frontend.findLinkForRelInJson(jsonStringGetSinglePU, RelTypes.GET_SINGLE_PARTNER_UNIVERSITY);
+        String url3 = frontend.findLinkForRelInJson(jsonResponseString, RelTypes.SELF);
 
         ResponseEntity<String> response3 = frontend.getPartnerUniversityById(url3);
 
-        String jsonStringGetAllPModules = frontend.responseToJsonString(response3);
+        String jsonResponseString2 = frontend.responseToJsonString(response3);
 
-        String url4 = frontend.findLinkForRelInJson(jsonStringGetAllPModules, RelTypes.CREATE_MODULE_IN_PARTNER_UNIVERSITY);
+        String url4 = frontend.findLinkForRelInJson(jsonResponseString2, RelTypes.GET_ALL_MODULES_OF_PARTNER_UNIVERSITY);
 
         String moduleJson = "{ \"name\": \"Test module\", \"semester\": 2," + " \"creditPoints\": 7}";
 
@@ -559,40 +628,47 @@ class DemoApplicationTests {
 
         ResponseEntity<String> response5 = frontend.getAllModulesForPartnerUniversity(url4);
 
-        String jsonStringGetSingleModule = frontend.responseToJsonString(response5);
+        String jsonResponseString3 = frontend.responseToJsonString(response5);
 
-        String url5 = frontend.findLinkForRelInJson(jsonStringGetSingleModule, RelTypes.GET_SINGLE_MODULE_OF_PARTNER_UNIVERSITY);
+        String url5 = frontend.findLinkForRelInJson(jsonResponseString3, RelTypes.SELF);
+
         ResponseEntity<String> response6 = frontend.getModuleOfPartnerUniversity(url5);
 
-        String jsonStringDeleteModule = frontend.responseToJsonString(response6);
-        assertThat(frontend.jsonStringContainsLink(jsonStringDeleteModule, RelTypes.DELETE_MODULE_OF_PARTNER_UNIVERSITY)).isTrue();
+        HttpHeaders headers5 = response6.getHeaders();
+
+        List<String> linkHeaders5 = headers5.get("Link");
+
+        assertThat(frontend.searchForRelInResponse(linkHeaders5, RelTypes.DELETE_MODULE_OF_PARTNER_UNIVERSITY)).isTrue();
     }
 
 
     @Test
     public void test_delete_single_module_of_partner_university() {
+        ResponseEntity<Map<String, String>> response = frontend.getDispatcher(port);
+        HttpHeaders headers = response.getHeaders();
+        List<String> linkHeaders = headers.get("Link");
+        String url = frontend.getLinkFromRel(linkHeaders, RelTypes.CREATE_PARTNER_UNIVERSITY);
+        String url2 = frontend.getLinkFromRel(linkHeaders, RelTypes.GET_ALL_PARTNER_UNIVERSITIES);
 
         for (int i = 0; i < 5; i++) {
             String partnerUniversityJson = "{ \"name\": \"Test University\", \"country\": \"Test Country\"," +
                     " \"department\": \"IT\", \"websiteUrl\": \"Test url\", \"contactPerson\": \"Test person\"," +
                     " \"maxOutgoingStudents\": 100, \"maxIncomingStudents\": 50, \"nextSpringSemesterStart\": \"test date\"," +
                     " \"nextAutumnSemesterStart\": \"test date 2\" }";
-            frontend.createPartnerUniversity(port, partnerUniversityJson);
+            frontend.createPartnerUniversity(url, partnerUniversityJson);
         }
 
-        //Get all partnerUniversities
-        ResponseEntity<String> response2 = frontend.getAllPartnerUniversities(port);
+        ResponseEntity<String> response2 = frontend.getAllPartnerUniversities(url2);
 
-        String jsonStringGetSinglePU = frontend.responseToJsonString(response2);
+        String jsonResponseString = frontend.responseToJsonString(response2);
 
-        //Check for single partnerUniversity Url
-        String url3 = frontend.findLinkForRelInJson(jsonStringGetSinglePU, RelTypes.GET_SINGLE_PARTNER_UNIVERSITY);
+        String url3 = frontend.findLinkForRelInJson(jsonResponseString, RelTypes.SELF);
 
         ResponseEntity<String> response3 = frontend.getPartnerUniversityById(url3);
 
-        String jsonStringGetAllPModules = frontend.responseToJsonString(response3);
+        String jsonResponseString2 = frontend.responseToJsonString(response3);
 
-        String url4 = frontend.findLinkForRelInJson(jsonStringGetAllPModules, RelTypes.CREATE_MODULE_IN_PARTNER_UNIVERSITY);
+        String url4 = frontend.findLinkForRelInJson(jsonResponseString2, RelTypes.GET_ALL_MODULES_OF_PARTNER_UNIVERSITY);
 
         String moduleJson = "{ \"name\": \"Test module\", \"semester\": 2," + " \"creditPoints\": 7}";
 
@@ -600,14 +676,16 @@ class DemoApplicationTests {
 
         ResponseEntity<String> response5 = frontend.getAllModulesForPartnerUniversity(url4);
 
-        String jsonStringGetSingleModule = frontend.responseToJsonString(response5);
+        String jsonResponseString3 = frontend.responseToJsonString(response5);
 
-        String url5 = frontend.findLinkForRelInJson(jsonStringGetSingleModule, RelTypes.GET_SINGLE_MODULE_OF_PARTNER_UNIVERSITY);
+        String url5 = frontend.findLinkForRelInJson(jsonResponseString3, RelTypes.SELF);
+
         ResponseEntity<String> response6 = frontend.getModuleOfPartnerUniversity(url5);
 
-        String jsonStringDeleteModule = frontend.responseToJsonString(response6);
+        String jsonResponseString4 = frontend.responseToJsonString(response6);
 
-        String url6 = frontend.findLinkForRelInJson(jsonStringDeleteModule, RelTypes.DELETE_MODULE_OF_PARTNER_UNIVERSITY);
+        String url6 = frontend.findLinkForRelInJson(jsonResponseString4, RelTypes.SELF);
+
         ResponseEntity<Void> response7 = frontend.deleteModuleOfPartnerUniversity(url6);
         assertThat(response7.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
     }

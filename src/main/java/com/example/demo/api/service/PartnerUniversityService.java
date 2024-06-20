@@ -27,6 +27,7 @@ public class PartnerUniversityService {
 
     public ResponseEntity<CollectionModel<EntityModel<PartnerUniversity>>> getAllPartnerUniversities(int page, int size, String filter, String sortBy, String sortDir) {
         try {
+
             Pageable paging = PageRequest.of(page, size, Sort.Direction.fromString(sortDir), sortBy);
             Page<PartnerUniversity> pageResult;
 
@@ -36,23 +37,26 @@ public class PartnerUniversityService {
                 pageResult = partnerUniversityRepository.findAll(paging);
             }
 
-            if (pageResult.isEmpty()) {
-                return new ResponseEntity<>(HttpStatus.NO_CONTENT);
-            }
-
-            List<EntityModel<PartnerUniversity>> partnerUniversityModels = pageResult.getContent().stream()
-                    .map(university -> EntityModel.of(university,
-                            linkTo(methodOn(PartnerUniversityController.class).getPartnerUniversityById(university.getId())).withRel(RelTypes.GET_SINGLE_PARTNER_UNIVERSITY)))
-                    .collect(Collectors.toList());
-
-            CollectionModel<EntityModel<PartnerUniversity>> collectionModel = CollectionModel.of(partnerUniversityModels,
-                    linkTo(PartnerUniversityController.class).withRel(RelTypes.SELF),
-                    linkTo(PartnerUniversityController.class).withRel(RelTypes.CREATE_PARTNER_UNIVERSITY));
-
             HttpHeaders headers = new HttpHeaders();
             addPaginationLinks(headers, page, size, pageResult);
             addSortingLinks(headers, sortDir);
             addFilteringLinks(headers);
+            addCrudLinksCollectionNoContent(headers);
+
+            if (pageResult.isEmpty()) {
+                return new ResponseEntity<>(headers, HttpStatus.NO_CONTENT);
+            }
+
+            List<EntityModel<PartnerUniversity>> partnerUniversityModels = pageResult.getContent().stream()
+                    .map(university -> EntityModel.of(university,
+                            linkTo(PartnerUniversityController.class).slash(university.getId()).withRel(RelTypes.SELF).withType("*/*"),
+                            linkTo(PartnerUniversityController.class).slash(university.getId()).withRel(RelTypes.GET_ALL_MODULES_OF_PARTNER_UNIVERSITY).withType("*/*")))
+                    .collect(Collectors.toList());
+
+            CollectionModel<EntityModel<PartnerUniversity>> collectionModel = CollectionModel.of(partnerUniversityModels,
+                    linkTo(PartnerUniversityController.class).withRel(RelTypes.SELF).withType("*/*"));
+
+            addCrudLinksGetCollection(headers);
 
             return new ResponseEntity<>(collectionModel, headers, HttpStatus.OK);
         } catch (Exception ex) {
@@ -66,14 +70,13 @@ public class PartnerUniversityService {
         if (partnerUniversityData.isPresent()) {
             PartnerUniversity university = partnerUniversityData.get();
             EntityModel<PartnerUniversity> partnerUniversityModel = EntityModel.of(university,
-                    linkTo(methodOn(PartnerUniversityController.class).getPartnerUniversityById(id)).withSelfRel(),
-                    linkTo(PartnerUniversityController.class).slash(id).slash("modules").withRel(RelTypes.GET_ALL_MODULES_OF_PARTNER_UNIVERSITY),
-                    linkTo(PartnerUniversityController.class).slash(id).slash("modules").withRel(RelTypes.CREATE_MODULE_IN_PARTNER_UNIVERSITY),
-                    linkTo(PartnerUniversityController.class).withRel(RelTypes.GET_ALL_PARTNER_UNIVERSITIES),
-                    linkTo(methodOn(PartnerUniversityController.class).updatePartnerUniversity(id, university)).withRel(RelTypes.UPDATE_SINGLE_PARTNER_UNIVERSITY),
-                    linkTo(methodOn(PartnerUniversityController.class).deletePartnerUniversity(id)).withRel(RelTypes.DELETE_SINGLE_PARTNER_UNIVERSITY));
+                    linkTo(methodOn(PartnerUniversityController.class).getPartnerUniversityById(id)).withSelfRel().withType("*/*"),
+                    linkTo(PartnerUniversityController.class).slash(id).slash("modules").withRel(RelTypes.GET_ALL_MODULES_OF_PARTNER_UNIVERSITY).withType("*/*"));
 
-            return new ResponseEntity<>(partnerUniversityModel, HttpStatus.OK);
+            HttpHeaders headers = new HttpHeaders();
+            addCrudLinksGetSingle(headers);
+
+            return new ResponseEntity<>(partnerUniversityModel, headers, HttpStatus.OK);
         } else {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
@@ -92,7 +95,9 @@ public class PartnerUniversityService {
                     partnerUniversity.getNextSpringSemesterStart(),
                     partnerUniversity.getNextAutumnSemesterStart()));
             EntityModel<PartnerUniversity> partnerUniversityModel = EntityModel.of(savedUniversity,
-                    linkTo(methodOn(PartnerUniversityController.class).getPartnerUniversityById(savedUniversity.getId())).withSelfRel());
+                    linkTo(methodOn(PartnerUniversityController.class).getPartnerUniversityById(savedUniversity.getId())).withSelfRel().withType("application/json"));
+
+
             return new ResponseEntity<>(partnerUniversityModel, HttpStatus.CREATED);
         } catch (Exception e) {
             return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
@@ -115,7 +120,7 @@ public class PartnerUniversityService {
             existingUniversity.setNextAutumnSemesterStart(partnerUniversity.getNextAutumnSemesterStart());
             PartnerUniversity updatedUniversity = partnerUniversityRepository.save(existingUniversity);
             EntityModel<PartnerUniversity> partnerUniversityModel = EntityModel.of(updatedUniversity,
-                    linkTo(methodOn(PartnerUniversityController.class).getPartnerUniversityById(updatedUniversity.getId())).withSelfRel());
+                    linkTo(methodOn(PartnerUniversityController.class).getPartnerUniversityById(updatedUniversity.getId())).withSelfRel().withType("*/*"));
             return new ResponseEntity<>(partnerUniversityModel, HttpStatus.OK);
         } else {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
@@ -125,28 +130,69 @@ public class PartnerUniversityService {
     public ResponseEntity<HttpStatus> deletePartnerUniversity(long id) {
         try {
             partnerUniversityRepository.deleteById(id);
-            return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+
+            HttpHeaders headers = new HttpHeaders();
+            addCrudLinksDelete(headers);
+
+            return new ResponseEntity<>(headers, HttpStatus.NO_CONTENT);
         } catch (Exception e) {
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
 
+    private void addCrudLinksGetCollection(HttpHeaders header){
+        String getSingle = "<" + linkTo(PartnerUniversityController.class).withRel(RelTypes.GET_SINGLE_PARTNER_UNIVERSITY).getHref() + "/{id}" + ">; rel=\"" + RelTypes.GET_SINGLE_PARTNER_UNIVERSITY + "\";type=\"*/*\"";
+        header.add(HttpHeaders.LINK, getSingle);
+    }
+
+    private void addCrudLinksCollectionNoContent(HttpHeaders header){
+        String create = "<" + linkTo(PartnerUniversityController.class).withRel(RelTypes.CREATE_PARTNER_UNIVERSITY).getHref() + ">; rel=\"" + RelTypes.CREATE_PARTNER_UNIVERSITY + "\";type=\"application/json\"";
+        header.add(HttpHeaders.LINK, create);
+
+    }
+
+
+    private void addCrudLinksGetSingle(HttpHeaders header){
+        String createModule = "<" + linkTo(PartnerUniversityController.class).slash("modules").withRel(RelTypes.CREATE_MODULE_IN_PARTNER_UNIVERSITY).getHref() + ">; rel=\"" + RelTypes.CREATE_MODULE_IN_PARTNER_UNIVERSITY + "\";type=\"application/json\"";
+        header.add(HttpHeaders.LINK, createModule);
+
+        String getAllModules = "<" + linkTo(PartnerUniversityController.class).slash("modules").withRel(RelTypes.GET_ALL_MODULES_OF_PARTNER_UNIVERSITY).getHref() + ">; rel=\"" + RelTypes.GET_ALL_MODULES_OF_PARTNER_UNIVERSITY + "\";type=\\\"*/*\\\"\"";
+        header.add(HttpHeaders.LINK, getAllModules);
+
+        String getAll = "<" + linkTo(PartnerUniversityController.class).withRel(RelTypes.GET_ALL_PARTNER_UNIVERSITIES).getHref() + ">; rel=\"" + RelTypes.GET_ALL_PARTNER_UNIVERSITIES + "\";type=\"*/*\"";
+        header.add(HttpHeaders.LINK, getAll);
+
+        String update = "<" + linkTo(PartnerUniversityController.class).withRel(RelTypes.UPDATE_SINGLE_PARTNER_UNIVERSITY).getHref() + "/{id}" + ">; rel=\"" + RelTypes.UPDATE_SINGLE_PARTNER_UNIVERSITY + "\";type=\"application/json\"";
+        header.add(HttpHeaders.LINK, update);
+
+        String delete = "<" + linkTo(PartnerUniversityController.class).withRel(RelTypes.DELETE_SINGLE_PARTNER_UNIVERSITY).getHref() + "/{id}" + ">; rel=\"" + RelTypes.DELETE_SINGLE_PARTNER_UNIVERSITY + "\";type=\"*/*\"";
+        header.add(HttpHeaders.LINK, delete);
+    }
+
+
+    private void addCrudLinksDelete(HttpHeaders header){
+        String getAll = "<" + linkTo(PartnerUniversityController.class).withRel(RelTypes.GET_ALL_PARTNER_UNIVERSITIES).getHref() + ">; rel=\"" + RelTypes.GET_ALL_PARTNER_UNIVERSITIES + "\";type=\"*/*\"";
+        header.add(HttpHeaders.LINK, getAll);
+
+    }
+
+
     private void addPaginationLinks(HttpHeaders headers, int page, int size, Page<PartnerUniversity> pageResult) {
         Link baseLink = linkTo(PartnerUniversityController.class).withRel(RelTypes.GET_ALL_PARTNER_UNIVERSITIES);
 
-        String urlWithPagination = "<" + baseLink.getHref() + "?page=" + page + "&size=" + size + ">; rel=\"self\";type=\"application/json\"";
+        String urlWithPagination = "<" + baseLink.getHref() + "?page=" + page + "&size=" + size + ">; rel=\"self\";type=\"*/*\"";
 
         //String selfLink = "<" + baseUrl + ">; rel=\"self\"";
         headers.add(HttpHeaders.LINK, urlWithPagination);
 
         if (pageResult.hasNext()) {
-            urlWithPagination = "<" + baseLink.getHref() + "?page=" + (page + 1) + "&size=" + size + ">; rel=\"next\";type=\"application/json\"";
+            urlWithPagination = "<" + baseLink.getHref() + "?page=" + (page + 1) + "&size=" + size + ">; rel=\"next\";type=\"*/*\"";
             headers.add(HttpHeaders.LINK, urlWithPagination);
         }
 
         if (pageResult.hasPrevious()) {
-            urlWithPagination = "<" + baseLink.getHref() + "?page=" + (page - 1) + "&size=" + size + ">; rel=\"prev\";type=\"application/json\"";
+            urlWithPagination = "<" + baseLink.getHref() + "?page=" + (page - 1) + "&size=" + size + ">; rel=\"prev\";type=\"*/*\"";
             headers.add(HttpHeaders.LINK, urlWithPagination);
         }
     }
@@ -155,10 +201,10 @@ public class PartnerUniversityService {
         Link baseLink = linkTo(PartnerUniversityController.class).withRel(RelTypes.GET_ALL_PARTNER_UNIVERSITIES);
 
         if(sortDir.equalsIgnoreCase("asc")) {
-            String sortDescLink = "<" + baseLink.getHref() + "?sortDir=desc" + ">; rel=\"sortDesc\";type=\"application/json\"";
+            String sortDescLink = "<" + baseLink.getHref() + "?sortDir=desc" + ">; rel=\"sortDesc\";type=\"*/*\"";
             headers.add(HttpHeaders.LINK, sortDescLink);
         }else {
-            String sortAscLink = "<" + baseLink.getHref() + "?sortDir=asc" + ">; rel=\"sortAsc\";type=\"application/json\"";
+            String sortAscLink = "<" + baseLink.getHref() + "?sortDir=asc" + ">; rel=\"sortAsc\";type=\"*/*\"";
             headers.add(HttpHeaders.LINK, sortAscLink);
         }
     }
@@ -166,7 +212,7 @@ public class PartnerUniversityService {
     private void addFilteringLinks(HttpHeaders headers){
         Link baseLink = linkTo(PartnerUniversityController.class).withRel(RelTypes.GET_ALL_PARTNER_UNIVERSITIES);
 
-        String sortFilterLink = "<" + baseLink.getHref() + "?filter={partnerUniversityName}" + ">; rel=\"sortFilter\";type=\"application/json\"";
+        String sortFilterLink = "<" + baseLink.getHref() + "?filter={partnerUniversityName}" + ">; rel=\"sortFilter\";type=\"*/*\"";
         headers.add(HttpHeaders.LINK, sortFilterLink);
     }
 }

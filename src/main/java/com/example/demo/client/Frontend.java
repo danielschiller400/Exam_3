@@ -1,10 +1,12 @@
 package com.example.demo.client;
 
+import com.example.demo.api.controller.RelTypes;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.http.*;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 
+import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -27,18 +29,11 @@ public class Frontend {
         return restTemplate.getForEntity(baseUrl1 + port + baseUrl2, (Class<Map<String, String>>) (Class<?>) Map.class);
     }
 
-    public Map<String, String> isLinkAvailable(ResponseEntity<Map<String, String>> response) {
-        Map<String, String> links = response.getBody();
-        return links;
-    }
-
-    public ResponseEntity<String> getAllPartnerUniversities(int port) {
-        String url = getEndpointUrlDispatcher("getAllPartnerUniversities", port);
+    public ResponseEntity<String> getAllPartnerUniversities(String url) {
         return restTemplate.getForEntity(url, String.class);
     }
 
-    public ResponseEntity<String> createPartnerUniversity(int port, String partnerUniversityJson) {
-        String url = getEndpointUrlDispatcher("createPartnerUniversity", port);
+    public ResponseEntity<String> createPartnerUniversity(String url, String partnerUniversityJson) {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         HttpEntity<String> entity = new HttpEntity<>(partnerUniversityJson, headers);
@@ -89,18 +84,6 @@ public class Frontend {
 
 //----------------------------------------------------------------------------------------------------------------------
 
-
-    public String getEndpointUrlDispatcher(String rel, int port) {
-        ResponseEntity<Map<String, String>> response = restTemplate.getForEntity(baseUrl1 + port + baseUrl2, (Class<Map<String, String>>) (Class<?>) Map.class);
-        if (response.getStatusCode() == HttpStatus.OK) {
-            Map<String, String> links = response.getBody();
-            if (links != null && links.containsKey(rel)) {
-                return links.get(rel);
-            }
-        }
-        throw new RuntimeException("Endpoint URL not found for rel: " + rel);
-    }
-
     public String responseToJsonString(ResponseEntity<?> response) {
         try {
             // Die Antwort in ein JSON-String konvertieren
@@ -111,21 +94,9 @@ public class Frontend {
         }
     }
 
-    public boolean jsonStringContainsLink(String jsonString, String rel){
-        // Erstellen des Musters mit Wortgrenzen
-        Pattern pattern = Pattern.compile("\\b" + Pattern.quote(rel) + "\\b");
-        Matcher matcher = pattern.matcher(jsonString);
-
-        while (matcher.find()) {
-            return true; // Wort gefunden
-        }
-
-        return false; // Wort nicht gefunden
-    }
-
     public String findLinkForRelInJson(String jsonString, String rel) {
         // Erstellen des Musters für das gesuchte Wort und den href-Link
-        final Pattern pattern = Pattern.compile("\\\\\"" + rel + "\\\\\":\\{\\\\\"href\\\\\":\\\\\"(http[s]?://[^\\\\\"]+)\\\\\"\\}", Pattern.CASE_INSENSITIVE);
+        final Pattern pattern = Pattern.compile("\\\\\"" + rel + "\\\\\":\\{\\\\\"href\\\\\":\\\\\"(http[s]?://[^\\\\\"]+)\\\\\"\\,", Pattern.CASE_INSENSITIVE);
         Matcher matcher = pattern.matcher(jsonString);
 
         // Überprüfen, ob das Muster gefunden wird
@@ -134,6 +105,62 @@ public class Frontend {
         }
 
         return null; // Link nicht gefunden
+    }
+
+
+
+
+    public boolean searchForRelInResponse(List<String> list, String rel) {
+
+        boolean found = false;
+        for (String s : list) {
+            if (containsRel(s, rel)){
+                found = true;
+                break;
+            }
+        }
+        return found;
+    }
+
+    private boolean containsRel(String linkHeader, String relValue) {
+        String regex = "rel=\"" + relValue + "\"";
+        Pattern pattern = Pattern.compile(regex);
+        Matcher matcher = pattern.matcher(linkHeader);
+
+        while (matcher.find()) {
+            return true;
+
+        }
+        return false;
+    }
+
+    public String getLinkFromRel(List<String> list, String rel) {
+        for (String s : list) {
+            if (containsRel(s, rel)){
+                System.out.println("Test: " + s);
+                String url = extractLink(s, rel);
+                return url;
+            }
+        }
+        return null;
+    }
+
+
+    private String extractLink(String linkHeader, String relValue) {
+        String linkRegex = "<([^>]*)>";
+        String relRegex = "rel=\"" + relValue + "\"";
+
+        Pattern linkPattern = Pattern.compile(linkRegex);
+        Pattern relPattern = Pattern.compile(relRegex);
+
+        Matcher linkMatcher = linkPattern.matcher(linkHeader);
+        Matcher relMatcher = relPattern.matcher(linkHeader);
+
+        while (linkMatcher.find() && relMatcher.find()) {
+            String link = linkMatcher.group(1);
+            return link;
+        }
+        return null;
     }
 
 }
