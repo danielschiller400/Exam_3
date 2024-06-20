@@ -188,7 +188,7 @@ public class PartnerUniversityModuleService {
     }
 
     private void addCrudLinksGetSingleNoContent(HttpHeaders header, long id){
-        String getAllModules = "<" + linkTo(PartnerUniversityController.class).slash(id).withRel(RelTypes.GET_ALL_MODULES_OF_PARTNER_UNIVERSITY).getHref() + "/modules" + ">; rel=\"" + RelTypes.GET_ALL_MODULES_OF_PARTNER_UNIVERSITY + "\";type=\\\"*/*\\\"\"";
+        String getAllModules = "<" + linkTo(PartnerUniversityController.class).slash(id).withRel(RelTypes.GET_ALL_MODULES_OF_PARTNER_UNIVERSITY).getHref() + "/modules" + ">; rel=\"" + RelTypes.GET_ALL_MODULES_OF_PARTNER_UNIVERSITY + "\";type=\"*/*\"";
         header.add(HttpHeaders.LINK, getAllModules);
     }
 
